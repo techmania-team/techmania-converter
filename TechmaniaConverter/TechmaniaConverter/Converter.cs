@@ -10,14 +10,15 @@ namespace TechmaniaConverter
 {
     class Converter
     {
-        public string warningMessage { get; private set; }
+        public string report { get; private set; }
         public Converter()
         {
-            warningMessage = null;
+            report = null;
         }
 
         private Track track;
         private Pattern pattern;
+        string longNoteCloser;
         private const int bps = 4;
         private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
         private const int maxLanes = 12;
@@ -34,6 +35,7 @@ namespace TechmaniaConverter
             pattern.patternMetadata.bps = bps;
             track.patterns.Add(pattern);
             char[] delim = { ' ', ':' };
+            longNoteCloser = "";
 
             // Keysound table.
             fileIndexToName = new Dictionary<string, string>();
@@ -42,6 +44,7 @@ namespace TechmaniaConverter
             // Error reporting.
             HashSet<string> ignoredCommands = new HashSet<string>();
             HashSet<string> ignoredChannels = new HashSet<string>();
+            bool meterWarning = false;
 
             while (true)
             {
@@ -81,6 +84,9 @@ namespace TechmaniaConverter
                     case "#BPM":
                         pattern.patternMetadata.initBpm = double.Parse(remainder);
                         break;
+                    case "#LNOBJ":
+                        longNoteCloser = remainder;
+                        break;
                     default:
                         knownHeader = false;
                         break;
@@ -98,6 +104,13 @@ namespace TechmaniaConverter
                     continue;
                 }
 
+                // Is this a BMP command?
+                if (command.Length == 6 && Regex.IsMatch(command, @"#BMP.."))
+                {
+                    ignoredCommands.Add("#BMPxx");
+                    continue;
+                }
+
                 // Is this a channel?
                 if (command.Length == 6 && Regex.IsMatch(command,
                     @"#[0-9][0-9][0-9][A-Z0-9][A-Z0-9]"))
@@ -107,6 +120,14 @@ namespace TechmaniaConverter
                     if (channel == "01" || Regex.IsMatch(channel, @"[1-4]."))
                     {
                         ConvertOneChannel(measure, remainder);
+                    }
+                    else if (channel == "02")
+                    {
+                        meterWarning = true;
+                    }
+                    else if (channel == "03")
+                    {
+                        ConvertBpmEvent(measure, remainder);
                     }
                     else
                     {
@@ -139,14 +160,21 @@ namespace TechmaniaConverter
                 {
                     writer.Write(c + ", ");
                 }
+                writer.WriteLine();
+                writer.WriteLine();
             }
-            warningMessage = writer.ToString();
+            if (meterWarning)
+            {
+                writer.WriteLine("Channel 02 is unsupported; conversion will assume 4/4 meter.");
+            }
+            report = writer.ToString();
 
             return track.Serialize();
         }
 
         private void ConvertOneChannel(int measure, string notes)
         {
+            // TODO: support long notes.
             int denom = notes.Length / 2;
             for (int num = 0; num < denom; num++)
             {
@@ -178,9 +206,15 @@ namespace TechmaniaConverter
                 {
                     type = NoteType.Basic,
                     pulse = pulse,
-                    lane = lane
+                    lane = lane,
+                    sound = filename
                 });
             }
+        }
+
+        private void ConvertBpmEvent(int measure, string notes)
+        {
+            // TODO: convert.
         }
     }
 }

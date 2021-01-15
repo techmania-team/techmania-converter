@@ -117,7 +117,11 @@ public class BpmEvent
 {
     public int pulse;
     public double bpm;
+#if UNITY_2019
     [NonSerialized]
+#else
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
     public float time;
 
     public BpmEvent Clone()
@@ -223,7 +227,11 @@ public partial class Pattern
     public PatternMetadata patternMetadata;
     public List<BpmEvent> bpmEvents;
 
+#if UNITY_2019
     [NonSerialized]
+#else
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
     public SortedSet<Note> notes;
 
     // Only used in serialization and deserialization.
@@ -432,7 +440,11 @@ public class DragNote : Note
     // describing the note head.
     // controlBefore of the first node and controlAfter
     // of the last node are ignored.
+#if UNITY_2019
     [NonSerialized]
+#else
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
     public List<DragNode> nodes;
 
     public DragNote()

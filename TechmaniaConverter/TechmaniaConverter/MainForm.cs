@@ -31,36 +31,29 @@ namespace TechmaniaConverter
 
         private void techBrowseButton_Click(object sender, EventArgs e)
         {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.Filter = "Tech Files (*.tech)|*.tech";
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            dialog.Description = "Save converted track to:";
+            dialog.ShowNewFolderButton = true;
+            dialog.UseDescriptionForTitle = true;
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                techPathTextBox.Text = dialog.FileName;
+                techPathTextBox.Text = dialog.SelectedPath;
             }
         }
 
-        private void convertButton_Click(object sender, EventArgs e)
+        string bms;
+        string tech;
+        private void loadButton_Click(object sender, EventArgs e)
         {
-            string bms = "", tech = "";
+            convertButton.Enabled = false;
             try
             {
                 bms = File.ReadAllText(bmsPathTextBox.Text);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not load BMS file:\n\n" + ex.Message);
+                MessageBox.Show("Could not load .bms file:\n\n" + ex.Message);
                 return;
-            }
-
-            if (File.Exists(techPathTextBox.Text))
-            {
-                DialogResult result = MessageBox.Show(
-                    "The .tech file already exists, it will be overwritten. Continue?",
-                    "Confirmation", MessageBoxButtons.YesNo);
-                if (result == DialogResult.No)
-                {
-                    return;
-                }
             }
 
             Converter converter = new Converter();
@@ -70,28 +63,24 @@ namespace TechmaniaConverter
             }
             catch (Exception ex)
             {
-                MessageBox.Show("An error occurred during conversion:\n\n" + ex.Message);
+                MessageBox.Show("An error occurred when generating report:\n\n" + ex.Message);
                 return;
             }
 
-            string warning = converter.warningMessage;
-            if (warning != null && warning != "")
-            {
-                DialogResult result = MessageBox.Show(
-                    "Warning:\n\n" + warning + "\n\nContinue?", "Confirmation", MessageBoxButtons.YesNo);
-                if (result == DialogResult.No)
-                {
-                    return;
-                }
-            }
+            reportTextBox.Text = converter.report;
+            convertButton.Enabled = true;
+        }
 
+        private void convertButton_Click(object sender, EventArgs e)
+        {
+            string techFilename = Path.Combine(techPathTextBox.Text, "track.tech");
             try
             {
-                File.WriteAllText(techPathTextBox.Text, tech);
+                File.WriteAllText(techFilename, tech);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not write .tech file:\n\n" + ex.Message);
+                MessageBox.Show("An error occurred when writing:\n\n" + ex.Message);
                 return;
             }
 
