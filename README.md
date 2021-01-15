@@ -1,2 +1,2 @@
-# techmania-converter
-Convert other rhythm game pattern formats to TECHMANIA's .tech.
+# TECHMANIA Converter
+Work-in-progress tool to convert .bms and .pt to .tech (TECHMANIA's format).
