@@ -30,14 +30,15 @@ namespace TechmaniaConverter
             }
         }
 
-        string bms;
-        string tech;
-        string techPath;
+        private string bms;
+        private string bmsPath;
+        private string tech;
+        private string techFolder;
+        private List<string> filesToCopy;
         private void loadButton_Click(object sender, EventArgs e)
         {
             convertButton.Enabled = false;
 
-            string bmsPath;
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "BMS Files (*.bms;*.bme;*.bml;*.pms)|*.bms;*.bme;*.bml;*.pms|All Files (*.*)|*.*";
             dialog.Multiselect = false;
@@ -73,13 +74,14 @@ namespace TechmaniaConverter
                 return;
             }
 
+            filesToCopy = new List<string>(converter.fileIndexToName.Values);
             reportTextBox.Text = converter.report;
             convertButton.Enabled = true;
         }
 
         private void convertButton_Click(object sender, EventArgs e)
         {
-            techPath = Path.Combine(techPathTextBox.Text, "track.tech");
+            techFolder = techPathTextBox.Text;
             convertButton.Enabled = false;
             progressBar.Value = 0;
 
@@ -114,7 +116,20 @@ namespace TechmaniaConverter
         {
             BackgroundWorker worker = sender as BackgroundWorker;
             worker.ReportProgress(0);
-            File.WriteAllText(techPath, tech);
+
+            File.WriteAllText(Path.Combine(techFolder, "track.tech"), tech);
+            string bmsFolder = Path.GetDirectoryName(bmsPath);
+            if (bmsFolder != techFolder)
+            {
+                for (int i = 0; i < filesToCopy.Count; i++)
+                {
+                    string filename = filesToCopy[i];
+                    File.Copy(Path.Combine(bmsFolder, filename),
+                        Path.Combine(techFolder, filename),
+                        overwrite: true);
+                    worker.ReportProgress(i * 100 / filesToCopy.Count);
+                }
+            }
             worker.ReportProgress(100);
         }
     }

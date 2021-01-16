@@ -22,7 +22,7 @@ namespace TechmaniaConverter
         private const int bps = 4;
         private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
         private const int maxLanes = 12;
-        private Dictionary<string, string> fileIndexToName;
+        public Dictionary<string, string> fileIndexToName { get; private set; }
         private Dictionary<int, int> numNotesAtPulse;
 
         public string ConvertBmsToTech(string bms)
