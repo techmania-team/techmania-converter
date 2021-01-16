@@ -23,6 +23,12 @@ namespace TechmaniaConverter
         private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
         private const int maxLanes = 12;
         public Dictionary<string, string> fileIndexToName { get; private set; }
+        // When a file is not found (even after looking for alternative extensions),
+        // it's not a failure, but notes referencing this file will have their
+        // keysound erased, and these files will also be skipped when copying.
+        public HashSet<string> filesNotFoundInBmsFolder { get; private set; }
+        // This includes full paths.
+        public string[] allFilesInBmsFolder;
         private Dictionary<int, int> numNotesAtPulse;
 
         public string ConvertBmsToTech(string bms)
@@ -39,6 +45,7 @@ namespace TechmaniaConverter
 
             // Keysound table.
             fileIndexToName = new Dictionary<string, string>();
+            filesNotFoundInBmsFolder = new HashSet<string>();
             numNotesAtPulse = new Dictionary<int, int>();
 
             // Error reporting.
@@ -99,7 +106,12 @@ namespace TechmaniaConverter
                     Regex.IsMatch(command, @"#OGG[A-Z0-9][A-Z0-9]")))
                 {
                     string fileIndex = command.Substring(4, 2);
-                    string filename = remainder;
+                    string filename = FindFile(remainder);
+                    if (filename == null)
+                    {
+                        filesNotFoundInBmsFolder.Add(remainder);
+                        filename = "";
+                    }
                     fileIndexToName.Add(fileIndex, filename);
                     continue;
                 }
@@ -189,6 +201,34 @@ namespace TechmaniaConverter
             }
 
             return track.Serialize();
+        }
+
+        // Both input and output filenames are without path.
+        // If not found, returns null.
+        public string FindFile(string filenameWithoutPath)
+        {
+            HashSet<string> acceptedFilenames = new HashSet<string>();
+            string originalExtension = Path.GetExtension(filenameWithoutPath);
+            if (originalExtension == ".wav" ||
+                originalExtension == ".ogg")
+            {
+                acceptedFilenames.Add(Path.ChangeExtension(filenameWithoutPath, ".wav"));
+                acceptedFilenames.Add(Path.ChangeExtension(filenameWithoutPath, ".ogg"));
+            }
+            else
+            {
+                acceptedFilenames.Add(filenameWithoutPath);
+            }
+
+            foreach (string fileInBmsFolder in allFilesInBmsFolder)
+            {
+                string filename = Path.GetFileName(fileInBmsFolder);
+                if (acceptedFilenames.Contains(filename))
+                {
+                    return filename;
+                }
+            }
+            return null;
         }
 
         private void ConvertOneChannel(int measure, string notes)

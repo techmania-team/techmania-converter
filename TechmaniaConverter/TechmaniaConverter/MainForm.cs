@@ -32,6 +32,7 @@ namespace TechmaniaConverter
 
         private string bms;
         private string bmsPath;
+        private string bmsFolder;
         private string tech;
         private string techFolder;
         private List<string> filesToCopy;
@@ -45,32 +46,34 @@ namespace TechmaniaConverter
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 bmsPath = dialog.FileName;
+                bmsFolder = Path.GetDirectoryName(bmsPath);
             }
             else
             {
                 return;
             }
-            
+
+            string[] allFilesInBmsFolder;
             try
             {
                 bms = File.ReadAllText(bmsPath);
+                allFilesInBmsFolder = Directory.GetFiles(bmsFolder);
             }
             catch (Exception ex)
             {
-                reportTextBox.Text = "Could not load .bms file:\n\n" + ex.Message;
+                reportTextBox.Text = "Could not load .bms:\r\n\r\n" + ex.Message;
                 return;
             }
 
-            // TODO: get a list of all files in the bms directory and feed into converter.
-            // Converter may replace wav with ogg if wav is not found.
             Converter converter = new Converter();
+            converter.allFilesInBmsFolder = allFilesInBmsFolder;
             try
             {
                 tech = converter.ConvertBmsToTech(bms);
             }
             catch (Exception ex)
             {
-                reportTextBox.Text = "An error occurred when parsing .bms file:\n\n" + ex.Message;
+                reportTextBox.Text = "An error occurred when parsing .bms file:\r\n\r\n" + ex.Message;
                 return;
             }
 
@@ -124,6 +127,7 @@ namespace TechmaniaConverter
                 for (int i = 0; i < filesToCopy.Count; i++)
                 {
                     string filename = filesToCopy[i];
+                    if (filename == "") continue;
                     File.Copy(Path.Combine(bmsFolder, filename),
                         Path.Combine(techFolder, filename),
                         overwrite: true);
