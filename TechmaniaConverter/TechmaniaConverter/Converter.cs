@@ -22,13 +22,18 @@ namespace TechmaniaConverter
         private const int bps = 4;
         private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
         private const int maxLanes = 12;
-        public Dictionary<string, string> fileIndexToName { get; private set; }
+
+        public Dictionary<string, string> keysoundIndexToName { get; private set; }
+        private Dictionary<string, double> bpmIndexToValue;
+        public Dictionary<string, string> bmpIndexToName { get; private set; }
+
         // When a file is not found (even after looking for alternative extensions),
         // it's not a failure, but notes referencing this file will have their
         // keysound erased, and these files will also be skipped when copying.
         public HashSet<string> filesNotFoundInBmsFolder { get; private set; }
         // This includes full paths.
         public string[] allFilesInBmsFolder;
+
         private Dictionary<int, int> numNotesAtPulse;
 
         public string ConvertBmsToTech(string bms)
@@ -38,20 +43,24 @@ namespace TechmaniaConverter
             track = new Track("", "");  // To be filled later
             pattern = new Pattern();
             pattern.patternMetadata.patternName = "Converted from BMS";
+            pattern.patternMetadata.controlScheme = ControlScheme.Keys;
             pattern.patternMetadata.bps = bps;
             track.patterns.Add(pattern);
             char[] delim = { ' ', ':' };
             longNoteCloser = "";
 
-            // Keysound table.
-            fileIndexToName = new Dictionary<string, string>();
+            // Lookup tables.
+            keysoundIndexToName = new Dictionary<string, string>();
             filesNotFoundInBmsFolder = new HashSet<string>();
+            bpmIndexToValue = new Dictionary<string, double>();
+            bmpIndexToName = new Dictionary<string, string>();
             numNotesAtPulse = new Dictionary<int, int>();
 
             // Error reporting.
             HashSet<string> ignoredCommands = new HashSet<string>();
             HashSet<string> ignoredChannels = new HashSet<string>();
             bool meterWarning = false;
+            bool nonVideoBmpWarning = false;
 
             while (true)
             {
@@ -112,23 +121,40 @@ namespace TechmaniaConverter
                         filesNotFoundInBmsFolder.Add(remainder);
                         filename = "";
                     }
-                    fileIndexToName.Add(fileIndex, filename);
+                    keysoundIndexToName.Add(fileIndex, filename);
                     continue;
                 }
 
                 // BMP command: record index and filename, but only for videos.
                 if (command.Length == 6 && Regex.IsMatch(command, @"#BMP.."))
                 {
-                    // TODO: If video, don't ignore.
-                    ignoredCommands.Add("#BMPxx");
+                    string extension = Path.GetExtension(remainder);
+                    if (extension == ".mp4" || extension == ".wmv")
+                    {
+                        string fileIndex = command.Substring(4, 2);
+                        string filename = FindFile(remainder);
+                        if (filename == null)
+                        {
+                            filesNotFoundInBmsFolder.Add(remainder);
+                        }
+                        else
+                        {
+                            bmpIndexToName.Add(fileIndex, filename);
+                        }
+                    }
+                    else
+                    {
+                        nonVideoBmpWarning = true;
+                    }
                     continue;
                 }
 
                 // BPM command: record index and BPM.
                 if (command.Length == 6 && Regex.IsMatch(command, @"#BPM.."))
                 {
-                    // TODO
-                    ignoredCommands.Add(command);
+                    string index = command.Substring(4, 2);
+                    double value = double.Parse(remainder);
+                    bpmIndexToValue.Add(index, value);
                     continue;
                 }
 
@@ -138,9 +164,21 @@ namespace TechmaniaConverter
                 {
                     int measure = int.Parse(command.Substring(1, 3));
                     string channel = command.Substring(4, 2);
+
+                    // Parse all indices in this measure+channel.
+                    Dictionary<int, string> pulseToIndex = new Dictionary<int, string>();
+                    int denom = remainder.Length / 2;
+                    for (int num = 0; num < denom; num++)
+                    {
+                        string index = remainder.Substring(num * 2, 2);
+                        if (index == "00") continue;
+                        int pulse = measure * pulsesPerScan + num * pulsesPerScan / denom;
+                        pulseToIndex.Add(pulse, index);
+                    }
+
                     if (channel == "01" || Regex.IsMatch(channel, @"[1-4]."))
                     {
-                        ConvertOneChannel(measure, remainder);
+                        ConvertNotes(pulseToIndex);
                     }
                     else if (channel == "02")
                     {
@@ -148,13 +186,16 @@ namespace TechmaniaConverter
                     }
                     else if (channel == "03")
                     {
-                        // TODO: handle BPM event
-                        ignoredChannels.Add(channel);
+                        ConvertInlineBpmEvents(pulseToIndex);
                     }
                     else if (channel == "04")
                     {
                         // TODO: handle BGA
                         ignoredChannels.Add(channel);
+                    }
+                    else if (channel == "08")
+                    {
+                        ConvertIndexedBpmEvents(pulseToIndex);
                     }
                     else
                     {
@@ -172,7 +213,7 @@ namespace TechmaniaConverter
             StringWriter writer = new StringWriter();
             if (ignoredCommands.Count > 0)
             {
-                writer.WriteLine("The following commands are unsupported, and therefore ignored:");
+                writer.WriteLine("The following commands are unsupported, and will be ignored:");
                 foreach (string c in ignoredCommands)
                 {
                     writer.Write(c + ", ");
@@ -182,7 +223,7 @@ namespace TechmaniaConverter
             }
             if (ignoredChannels.Count > 0)
             {
-                writer.WriteLine("The following channels are unsupported, and therefore ignored:");
+                writer.WriteLine("The following channels are unsupported, and will be ignored:");
                 foreach (string c in ignoredChannels)
                 {
                     writer.Write(c + ", ");
@@ -193,6 +234,14 @@ namespace TechmaniaConverter
             if (meterWarning)
             {
                 writer.WriteLine("Channel 02 is unsupported; conversion will assume 4/4 meter.");
+                writer.WriteLine();
+                writer.WriteLine();
+            }
+            if (nonVideoBmpWarning)
+            {
+                writer.WriteLine("#BMP commands that do not refer to a video will be ignored.");
+                writer.WriteLine();
+                writer.WriteLine();
             }
             report = writer.ToString();
             if (report == "")
@@ -231,22 +280,20 @@ namespace TechmaniaConverter
             return null;
         }
 
-        private void ConvertOneChannel(int measure, string notes)
+        private void ConvertNotes(Dictionary<int, string> pulseToKeysoundIndex)
         {
             // TODO: support long notes.
-            int denom = notes.Length / 2;
-            for (int num = 0; num < denom; num++)
+            foreach (KeyValuePair<int, string> pair in pulseToKeysoundIndex)
             {
-                string fileIndex = notes.Substring(num * 2, 2);
-                if (fileIndex == "00") continue;
+                int pulse = pair.Key;
+                string index = pair.Value;
 
                 string filename = "";
-                if (fileIndexToName.ContainsKey(fileIndex))
+                if (keysoundIndexToName.ContainsKey(index))
                 {
-                    filename = fileIndexToName[fileIndex];
+                    filename = keysoundIndexToName[index];
                 }
 
-                int pulse = measure * pulsesPerScan + num * pulsesPerScan / denom;
                 // If needed, nudge pulse forward until there are <12 notes
                 // at the current pulse.
                 while (true)
@@ -271,9 +318,34 @@ namespace TechmaniaConverter
             }
         }
 
-        private void ConvertBpmEvent(int measure, string notes)
+        private void ConvertInlineBpmEvents(Dictionary<int, string> pulseToHexBpm)
         {
-            // TODO
+            foreach (KeyValuePair<int, string> pair in pulseToHexBpm)
+            {
+                int pulse = pair.Key;
+                string hexBpm = pair.Value;
+                int bpm = Convert.ToInt32(hexBpm, 16);
+                pattern.bpmEvents.Add(new BpmEvent()
+                {
+                    pulse = pulse,
+                    bpm = bpm
+                });
+            }
+        }
+
+        private void ConvertIndexedBpmEvents(Dictionary<int, string> pulseToBpmIndex)
+        {
+            foreach (KeyValuePair<int, string> pair in pulseToBpmIndex)
+            {
+                int pulse = pair.Key;
+                string index = pair.Value;
+                double bpm = bpmIndexToValue[index];
+                pattern.bpmEvents.Add(new BpmEvent()
+                {
+                    pulse = pulse,
+                    bpm = bpm
+                });
+            }
         }
     }
 }

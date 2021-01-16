@@ -77,7 +77,7 @@ namespace TechmaniaConverter
                 return;
             }
 
-            filesToCopy = new List<string>(converter.fileIndexToName.Values);
+            filesToCopy = new List<string>(converter.keysoundIndexToName.Values);
             reportTextBox.Text = converter.report;
             convertButton.Enabled = true;
         }
