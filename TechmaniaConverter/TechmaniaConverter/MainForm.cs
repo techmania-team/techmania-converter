@@ -18,17 +18,6 @@ namespace TechmaniaConverter
             InitializeComponent();
         }
 
-        private void bmsBrowseButton_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "BMS Files (*.bms;*.bme;*.bml;*.pms)|*.bms;*.bme;*.bml;*.pms|All Files (*.*)|*.*";
-            dialog.Multiselect = false;
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                bmsPathTextBox.Text = dialog.FileName;
-            }
-        }
-
         private void techBrowseButton_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
@@ -43,19 +32,36 @@ namespace TechmaniaConverter
 
         string bms;
         string tech;
+        string techPath;
         private void loadButton_Click(object sender, EventArgs e)
         {
             convertButton.Enabled = false;
+
+            string bmsPath;
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Filter = "BMS Files (*.bms;*.bme;*.bml;*.pms)|*.bms;*.bme;*.bml;*.pms|All Files (*.*)|*.*";
+            dialog.Multiselect = false;
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                bmsPath = dialog.FileName;
+            }
+            else
+            {
+                return;
+            }
+            
             try
             {
-                bms = File.ReadAllText(bmsPathTextBox.Text);
+                bms = File.ReadAllText(bmsPath);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not load .bms file:\n\n" + ex.Message);
+                reportTextBox.Text = "Could not load .bms file:\n\n" + ex.Message;
                 return;
             }
 
+            // TODO: get a list of all files in the bms directory and feed into converter.
+            // Converter may replace wav with ogg if wav is not found.
             Converter converter = new Converter();
             try
             {
@@ -63,7 +69,7 @@ namespace TechmaniaConverter
             }
             catch (Exception ex)
             {
-                MessageBox.Show("An error occurred when generating report:\n\n" + ex.Message);
+                reportTextBox.Text = "An error occurred when parsing .bms file:\n\n" + ex.Message;
                 return;
             }
 
@@ -73,18 +79,43 @@ namespace TechmaniaConverter
 
         private void convertButton_Click(object sender, EventArgs e)
         {
-            string techFilename = Path.Combine(techPathTextBox.Text, "track.tech");
-            try
+            techPath = Path.Combine(techPathTextBox.Text, "track.tech");
+            convertButton.Enabled = false;
+            progressBar.Value = 0;
+
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += ConversionWork;
+            worker.WorkerReportsProgress = true;
+            worker.ProgressChanged += ConversionProgressChanged;
+            worker.RunWorkerCompleted += ConversionCompleted;
+            worker.RunWorkerAsync();
+        }
+
+        private void ConversionCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
             {
-                File.WriteAllText(techFilename, tech);
+                MessageBox.Show("An error occurred during conversion:\n\n" + e.Error.Message);
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show("An error occurred when writing:\n\n" + ex.Message);
-                return;
+                MessageBox.Show("Conversion successful.");
             }
 
-            MessageBox.Show("Conversion successful.");
+            progressBar.Value = 0;
+        }
+
+        private void ConversionProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar.Value = e.ProgressPercentage;
+        }
+
+        private void ConversionWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+            worker.ReportProgress(0);
+            File.WriteAllText(techPath, tech);
+            worker.ReportProgress(100);
         }
     }
 }

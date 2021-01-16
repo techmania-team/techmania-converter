@@ -18,7 +18,7 @@ namespace TechmaniaConverter
 
         private Track track;
         private Pattern pattern;
-        string longNoteCloser;
+        private string longNoteCloser;
         private const int bps = 4;
         private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
         private const int maxLanes = 12;
@@ -93,7 +93,7 @@ namespace TechmaniaConverter
                 }
                 if (knownHeader) continue;
 
-                // Is this a sound file command?
+                // Sound file command: record index and filename.
                 if (command.Length == 6 && (
                     Regex.IsMatch(command, @"#WAV[A-Z0-9][A-Z0-9]") ||
                     Regex.IsMatch(command, @"#OGG[A-Z0-9][A-Z0-9]")))
@@ -104,14 +104,23 @@ namespace TechmaniaConverter
                     continue;
                 }
 
-                // Is this a BMP command?
+                // BMP command: record index and filename, but only for videos.
                 if (command.Length == 6 && Regex.IsMatch(command, @"#BMP.."))
                 {
+                    // TODO: If video, don't ignore.
                     ignoredCommands.Add("#BMPxx");
                     continue;
                 }
 
-                // Is this a channel?
+                // BPM command: record index and BPM.
+                if (command.Length == 6 && Regex.IsMatch(command, @"#BPM.."))
+                {
+                    // TODO
+                    ignoredCommands.Add(command);
+                    continue;
+                }
+
+                // Measure and channel: handle supported channels.
                 if (command.Length == 6 && Regex.IsMatch(command,
                     @"#[0-9][0-9][0-9][A-Z0-9][A-Z0-9]"))
                 {
@@ -127,7 +136,13 @@ namespace TechmaniaConverter
                     }
                     else if (channel == "03")
                     {
-                        ConvertBpmEvent(measure, remainder);
+                        // TODO: handle BPM event
+                        ignoredChannels.Add(channel);
+                    }
+                    else if (channel == "04")
+                    {
+                        // TODO: handle BGA
+                        ignoredChannels.Add(channel);
                     }
                     else
                     {
@@ -168,6 +183,10 @@ namespace TechmaniaConverter
                 writer.WriteLine("Channel 02 is unsupported; conversion will assume 4/4 meter.");
             }
             report = writer.ToString();
+            if (report == "")
+            {
+                report = "No problems found.";
+            }
 
             return track.Serialize();
         }
@@ -214,7 +233,7 @@ namespace TechmaniaConverter
 
         private void ConvertBpmEvent(int measure, string notes)
         {
-            // TODO: convert.
+            // TODO
         }
     }
 }
