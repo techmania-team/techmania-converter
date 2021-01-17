@@ -8,16 +8,17 @@ using System.Threading.Tasks;
 
 namespace TechmaniaConverter
 {
-    class Converter
+    class BmsConverter
     {
         public string report { get; private set; }
-        public Converter()
+        public BmsConverter()
         {
             report = null;
         }
 
         private Track track;
         private Pattern pattern;
+        private int bgaStartPulse;
         private string longNoteCloser;
         private const int bps = 4;
         private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
@@ -27,12 +28,8 @@ namespace TechmaniaConverter
         private Dictionary<string, double> bpmIndexToValue;
         public Dictionary<string, string> bmpIndexToName { get; private set; }
 
-        // When a file is not found (even after looking for alternative extensions),
-        // it's not a failure, but notes referencing this file will have their
-        // keysound erased, and these files will also be skipped when copying.
-        public HashSet<string> filesNotFoundInBmsFolder { get; private set; }
-        // This includes full paths.
-        public string[] allFilesInBmsFolder;
+        // This does not include full paths.
+        public HashSet<string> allFilenamesInBmsFolder;
 
         private Dictionary<int, int> numNotesAtPulse;
 
@@ -45,13 +42,14 @@ namespace TechmaniaConverter
             pattern.patternMetadata.patternName = "Converted from BMS";
             pattern.patternMetadata.controlScheme = ControlScheme.Keys;
             pattern.patternMetadata.bps = bps;
+            pattern.patternMetadata.bga = "";
             track.patterns.Add(pattern);
+
             char[] delim = { ' ', ':' };
             longNoteCloser = "";
 
             // Lookup tables.
             keysoundIndexToName = new Dictionary<string, string>();
-            filesNotFoundInBmsFolder = new HashSet<string>();
             bpmIndexToValue = new Dictionary<string, double>();
             bmpIndexToName = new Dictionary<string, string>();
             numNotesAtPulse = new Dictionary<int, int>();
@@ -61,6 +59,8 @@ namespace TechmaniaConverter
             HashSet<string> ignoredChannels = new HashSet<string>();
             bool meterWarning = false;
             bool nonVideoBmpWarning = false;
+            bool lnTypeTwo = false;
+            bool multipleBga = false;
 
             while (true)
             {
@@ -100,6 +100,16 @@ namespace TechmaniaConverter
                     case "#BPM":
                         pattern.patternMetadata.initBpm = double.Parse(remainder);
                         break;
+                    case "#LNTYPE":
+                        if (remainder == "1")
+                        {
+                            // Silently acknowledge.
+                        }
+                        else
+                        {
+                            lnTypeTwo = true;
+                        }
+                        break;
                     case "#LNOBJ":
                         longNoteCloser = remainder;
                         break;
@@ -118,7 +128,9 @@ namespace TechmaniaConverter
                     string filename = FindFile(remainder);
                     if (filename == null)
                     {
-                        filesNotFoundInBmsFolder.Add(remainder);
+                        // When a file is not found (even after looking for alternative extensions),
+                        // it's not a failure, but notes referencing this file will have their
+                        // keysound erased, and these files will also be skipped when copying.
                         filename = "";
                     }
                     keysoundIndexToName.Add(fileIndex, filename);
@@ -133,11 +145,7 @@ namespace TechmaniaConverter
                     {
                         string fileIndex = command.Substring(4, 2);
                         string filename = FindFile(remainder);
-                        if (filename == null)
-                        {
-                            filesNotFoundInBmsFolder.Add(remainder);
-                        }
-                        else
+                        if (filename != null)
                         {
                             bmpIndexToName.Add(fileIndex, filename);
                         }
@@ -166,14 +174,14 @@ namespace TechmaniaConverter
                     string channel = command.Substring(4, 2);
 
                     // Parse all indices in this measure+channel.
-                    Dictionary<int, string> pulseToIndex = new Dictionary<int, string>();
+                    List<Tuple<int, string>> pulseToIndex = new List<Tuple<int, string>>();
                     int denom = remainder.Length / 2;
                     for (int num = 0; num < denom; num++)
                     {
                         string index = remainder.Substring(num * 2, 2);
                         if (index == "00") continue;
                         int pulse = measure * pulsesPerScan + num * pulsesPerScan / denom;
-                        pulseToIndex.Add(pulse, index);
+                        pulseToIndex.Add(new Tuple<int, string>(pulse, index));
                     }
 
                     if (channel == "01" || Regex.IsMatch(channel, @"[1-4]."))
@@ -190,8 +198,7 @@ namespace TechmaniaConverter
                     }
                     else if (channel == "04")
                     {
-                        // TODO: handle BGA
-                        ignoredChannels.Add(channel);
+                        ConvertBmp(pulseToIndex, ref multipleBga);
                     }
                     else if (channel == "08")
                     {
@@ -209,11 +216,18 @@ namespace TechmaniaConverter
                 ignoredCommands.Add(command);
             }
 
+            // Calculate BGA start time, after all BPM events are recorded.
+            if (pattern.patternMetadata.bga != "")
+            {
+                pattern.PrepareForTimeCalculation();
+                pattern.patternMetadata.bgaOffset = pattern.PulseToTime(bgaStartPulse);
+            }
+
             // Generate warning message.
             StringWriter writer = new StringWriter();
             if (ignoredCommands.Count > 0)
             {
-                writer.WriteLine("The following commands are unsupported, and will be ignored:");
+                writer.WriteLine("The following commands are not supported, and will be ignored:");
                 foreach (string c in ignoredCommands)
                 {
                     writer.Write(c + ", ");
@@ -223,7 +237,7 @@ namespace TechmaniaConverter
             }
             if (ignoredChannels.Count > 0)
             {
-                writer.WriteLine("The following channels are unsupported, and will be ignored:");
+                writer.WriteLine("The following channels are not supported, and will be ignored:");
                 foreach (string c in ignoredChannels)
                 {
                     writer.Write(c + ", ");
@@ -233,13 +247,25 @@ namespace TechmaniaConverter
             }
             if (meterWarning)
             {
-                writer.WriteLine("Channel 02 is unsupported; conversion will assume 4/4 meter.");
+                writer.WriteLine("Channel 02 is not supported; conversion will assume 4/4 meter.");
                 writer.WriteLine();
                 writer.WriteLine();
             }
             if (nonVideoBmpWarning)
             {
                 writer.WriteLine("#BMP commands that do not refer to a video will be ignored.");
+                writer.WriteLine();
+                writer.WriteLine();
+            }
+            if (multipleBga)
+            {
+                writer.WriteLine("Found multiple notes in channel 04 that refer to videos. The 2nd and onward of these notes will be ignored.");
+                writer.WriteLine();
+                writer.WriteLine();
+            }
+            if (lnTypeTwo)
+            {
+                writer.WriteLine("#LNTYPE 2 is not supported. All notes in channels 5x and 6x will be ignored.");
                 writer.WriteLine();
                 writer.WriteLine();
             }
@@ -256,7 +282,7 @@ namespace TechmaniaConverter
         // If not found, returns null.
         public string FindFile(string filenameWithoutPath)
         {
-            HashSet<string> acceptedFilenames = new HashSet<string>();
+            List<string> acceptedFilenames = new List<string>();
             string originalExtension = Path.GetExtension(filenameWithoutPath);
             if (originalExtension == ".wav" ||
                 originalExtension == ".ogg")
@@ -269,24 +295,23 @@ namespace TechmaniaConverter
                 acceptedFilenames.Add(filenameWithoutPath);
             }
 
-            foreach (string fileInBmsFolder in allFilesInBmsFolder)
+            foreach (string acceptedFilename in acceptedFilenames)
             {
-                string filename = Path.GetFileName(fileInBmsFolder);
-                if (acceptedFilenames.Contains(filename))
+                if (allFilenamesInBmsFolder.Contains(acceptedFilename.ToLower()))
                 {
-                    return filename;
+                    return acceptedFilename;
                 }
             }
             return null;
         }
 
-        private void ConvertNotes(Dictionary<int, string> pulseToKeysoundIndex)
+        private void ConvertNotes(List<Tuple<int, string>> pulseToKeysoundIndex)
         {
             // TODO: support long notes.
-            foreach (KeyValuePair<int, string> pair in pulseToKeysoundIndex)
+            foreach (Tuple<int, string> tuple in pulseToKeysoundIndex)
             {
-                int pulse = pair.Key;
-                string index = pair.Value;
+                int pulse = tuple.Item1;
+                string index = tuple.Item2;
 
                 string filename = "";
                 if (keysoundIndexToName.ContainsKey(index))
@@ -318,12 +343,12 @@ namespace TechmaniaConverter
             }
         }
 
-        private void ConvertInlineBpmEvents(Dictionary<int, string> pulseToHexBpm)
+        private void ConvertInlineBpmEvents(List<Tuple<int, string>> pulseToHexBpm)
         {
-            foreach (KeyValuePair<int, string> pair in pulseToHexBpm)
+            foreach (Tuple<int, string> tuple in pulseToHexBpm)
             {
-                int pulse = pair.Key;
-                string hexBpm = pair.Value;
+                int pulse = tuple.Item1;
+                string hexBpm = tuple.Item2;
                 int bpm = Convert.ToInt32(hexBpm, 16);
                 pattern.bpmEvents.Add(new BpmEvent()
                 {
@@ -333,18 +358,40 @@ namespace TechmaniaConverter
             }
         }
 
-        private void ConvertIndexedBpmEvents(Dictionary<int, string> pulseToBpmIndex)
+        private void ConvertIndexedBpmEvents(List<Tuple<int, string>> pulseToBpmIndex)
         {
-            foreach (KeyValuePair<int, string> pair in pulseToBpmIndex)
+            foreach (Tuple<int, string> tuple in pulseToBpmIndex)
             {
-                int pulse = pair.Key;
-                string index = pair.Value;
+                int pulse = tuple.Item1;
+                string index = tuple.Item2;
                 double bpm = bpmIndexToValue[index];
                 pattern.bpmEvents.Add(new BpmEvent()
                 {
                     pulse = pulse,
                     bpm = bpm
                 });
+            }
+        }
+
+        private void ConvertBmp(List<Tuple<int, string>> pulseToBmpIndex,
+            ref bool multipleBga)
+        {
+            foreach (Tuple<int, string> tuple in pulseToBmpIndex)
+            {
+                int pulse = tuple.Item1;
+                string index = tuple.Item2;
+                if (!bmpIndexToName.ContainsKey(index)) continue;
+                
+                if (pattern.patternMetadata.bga != "")
+                {
+                    multipleBga = true;
+                    return;  // No need to process the next notes.
+                }
+                else
+                {
+                    bgaStartPulse = pulse;
+                    pattern.patternMetadata.bga = bmpIndexToName[index];
+                }
             }
         }
     }

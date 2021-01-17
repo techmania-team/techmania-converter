@@ -65,8 +65,13 @@ namespace TechmaniaConverter
                 return;
             }
 
-            Converter converter = new Converter();
-            converter.allFilesInBmsFolder = allFilesInBmsFolder;
+            BmsConverter converter = new BmsConverter();
+            converter.allFilenamesInBmsFolder = new HashSet<string>();
+            foreach (string file in allFilesInBmsFolder)
+            {
+                converter.allFilenamesInBmsFolder.Add(Path.GetFileName(file).ToLower());
+            }
+
             try
             {
                 tech = converter.ConvertBmsToTech(bms);
@@ -78,6 +83,7 @@ namespace TechmaniaConverter
             }
 
             filesToCopy = new List<string>(converter.keysoundIndexToName.Values);
+            filesToCopy.AddRange(converter.bmpIndexToName.Values);
             reportTextBox.Text = converter.report;
             convertButton.Enabled = true;
         }
