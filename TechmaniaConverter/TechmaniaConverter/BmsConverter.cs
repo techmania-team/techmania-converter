@@ -32,6 +32,7 @@ namespace TechmaniaConverter
         public HashSet<string> allFilenamesInBmsFolder;
 
         private Dictionary<int, int> numNotesAtPulse;
+        public Dictionary<string, Note> channelToLastNote;
 
         public string ConvertBmsToTech(string bms)
         {
@@ -53,6 +54,7 @@ namespace TechmaniaConverter
             bpmIndexToValue = new Dictionary<string, double>();
             bmpIndexToName = new Dictionary<string, string>();
             numNotesAtPulse = new Dictionary<int, int>();
+            channelToLastNote = new Dictionary<string, Note>();
 
             // Error reporting.
             HashSet<string> ignoredCommands = new HashSet<string>();
@@ -186,7 +188,15 @@ namespace TechmaniaConverter
 
                     if (channel == "01" || Regex.IsMatch(channel, @"[1-4]."))
                     {
-                        ConvertNotes(pulseToIndex);
+                        ConvertNotes(pulseToIndex, channel);
+                    }
+                    else if (Regex.IsMatch(channel, @"[5-6]."))
+                    {
+                        // Only handle these channels under LNTYPE 1.
+                        if (!lnTypeTwo)
+                        {
+                            ConvertNotes(pulseToIndex, channel);
+                        }
                     }
                     else if (channel == "02")
                     {
@@ -305,41 +315,86 @@ namespace TechmaniaConverter
             return null;
         }
 
-        private void ConvertNotes(List<Tuple<int, string>> pulseToKeysoundIndex)
+        private void ConvertNotes(List<Tuple<int, string>> pulseToKeysoundIndex,
+            string channel)
         {
-            // TODO: support long notes.
             foreach (Tuple<int, string> tuple in pulseToKeysoundIndex)
             {
                 int pulse = tuple.Item1;
                 string index = tuple.Item2;
 
-                string filename = "";
-                if (keysoundIndexToName.ContainsKey(index))
+                // Is this note an LN closer?
+                bool lnCloser = false;
+                if (Regex.IsMatch(channel, @"[1-4].")
+                    && index == longNoteCloser
+                    && channelToLastNote.ContainsKey(channel)
+                    && channelToLastNote[channel] != null)
                 {
-                    filename = keysoundIndexToName[index];
+                    lnCloser = true;
+                }
+                else if (Regex.IsMatch(channel, @"[5-6].")
+                    && channelToLastNote.ContainsKey(channel)
+                    && channelToLastNote[channel] != null)
+                {
+                    lnCloser = true;
                 }
 
-                // If needed, nudge pulse forward until there are <12 notes
-                // at the current pulse.
-                while (true)
+                if (lnCloser)
                 {
-                    if (!numNotesAtPulse.ContainsKey(pulse))
+                    // Turn the last note in this channel into a long note.
+                    Note lastNote = channelToLastNote[channel];
+                    int duration = pulse - lastNote.pulse;
+                    pattern.notes.Remove(lastNote);
+
+                    HoldNote holdNote = new HoldNote()
                     {
-                        numNotesAtPulse.Add(pulse, 0);
-                    }
-                    if (numNotesAtPulse[pulse] < maxLanes) break;
-                    pulse++;
-                }
+                        type = NoteType.Hold,
+                        pulse = lastNote.pulse,
+                        lane = lastNote.lane,
+                        sound = lastNote.sound,
+                        duration = duration
+                    };
+                    pattern.notes.Add(holdNote);
 
-                int lane = numNotesAtPulse[pulse];
-                numNotesAtPulse[pulse]++;
-                pattern.notes.Add(new Note()
+                    // On channels 5x and 6x, prepare for the next note.
+                    if (Regex.IsMatch(channel, @"[5-6]."))
+                    {
+                        channelToLastNote.Remove(channel);
+                    }
+                }
+                else
                 {
-                    type = NoteType.Basic,
-                    pulse = pulse,
-                    lane = lane,
-                    sound = filename
-                });
+                    // Add note and mark as last note.
+                    string filename = "";
+                    if (keysoundIndexToName.ContainsKey(index))
+                    {
+                        filename = keysoundIndexToName[index];
+                    }
+
+                    // If needed, nudge pulse forward until there are <12 notes
+                    // at the current pulse.
+                    while (true)
+                    {
+                        if (!numNotesAtPulse.ContainsKey(pulse))
+                        {
+                            numNotesAtPulse.Add(pulse, 0);
+                        }
+                        if (numNotesAtPulse[pulse] < maxLanes) break;
+                        pulse++;
+                    }
+
+                    int lane = numNotesAtPulse[pulse];
+                    numNotesAtPulse[pulse]++;
+                    Note note = new Note()
+                    {
+                        type = NoteType.Basic,
+                        pulse = pulse,
+                        lane = lane,
+                        sound = filename
+                    };
+                    pattern.notes.Add(note);
+                    channelToLastNote[channel] = note;
+                }
             }
         }
 
