@@ -113,6 +113,7 @@ namespace TechmaniaConverter
                 MessageBox.Show("Conversion successful.");
             }
 
+            convertButton.Enabled = true;
             progressBar.Value = 0;
         }
 
@@ -126,6 +127,7 @@ namespace TechmaniaConverter
             BackgroundWorker worker = sender as BackgroundWorker;
             worker.ReportProgress(0);
 
+            Directory.CreateDirectory(techFolder);
             File.WriteAllText(Path.Combine(techFolder, "track.tech"), tech);
             string bmsFolder = Path.GetDirectoryName(bmsPath);
             if (bmsFolder != techFolder)

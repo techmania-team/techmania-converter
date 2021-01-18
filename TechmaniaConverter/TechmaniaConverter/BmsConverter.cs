@@ -22,7 +22,7 @@ namespace TechmaniaConverter
         private string longNoteCloser;
         private const int bps = 4;
         private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
-        private const int maxLanes = 12;
+        private const int maxLanes = 64;
 
         public Dictionary<string, string> keysoundIndexToName { get; private set; }
         private Dictionary<string, double> bpmIndexToValue;
@@ -31,13 +31,13 @@ namespace TechmaniaConverter
         // This does not include full paths.
         public HashSet<string> allFilenamesInBmsFolder;
 
-        private Dictionary<int, int> numNotesAtPulse;
-        public Dictionary<string, Note> channelToLastNote;
+        private SortedSet<string> channels;  // Used channels among 10-4Z.
+        private Dictionary<string, Note> channelToLastNote;
+        private Dictionary<string, int> channelToLane;
+        private HashSet<string> channelsToCollapse;
 
         public string ConvertBmsToTech(string bms)
         {
-            StringReader reader = new StringReader(bms);
-
             track = new Track("", "");  // To be filled later
             pattern = new Pattern();
             pattern.patternMetadata.patternName = "Converted from BMS";
@@ -53,8 +53,10 @@ namespace TechmaniaConverter
             keysoundIndexToName = new Dictionary<string, string>();
             bpmIndexToValue = new Dictionary<string, double>();
             bmpIndexToName = new Dictionary<string, string>();
-            numNotesAtPulse = new Dictionary<int, int>();
+            channels = new SortedSet<string>();
             channelToLastNote = new Dictionary<string, Note>();
+            channelToLane = new Dictionary<string, int>();
+            channelsToCollapse = new HashSet<string>();
 
             // Error reporting.
             HashSet<string> ignoredCommands = new HashSet<string>();
@@ -64,6 +66,8 @@ namespace TechmaniaConverter
             bool lnTypeTwo = false;
             bool multipleBga = false;
 
+            // 1st pass: Metadata, keysounds, videos, BPM changes, channels.
+            StringReader reader = new StringReader(bms);
             while (true)
             {
                 string line = reader.ReadLine();
@@ -186,17 +190,13 @@ namespace TechmaniaConverter
                         pulseToIndex.Add(new Tuple<int, string>(pulse, index));
                     }
 
-                    if (channel == "01" || Regex.IsMatch(channel, @"[1-4]."))
+                    if (channel == "01")
                     {
-                        ConvertNotes(pulseToIndex, channel);
+                        // Do nothing; this channel is dynamically mapped.
                     }
-                    else if (Regex.IsMatch(channel, @"[5-6]."))
+                    else if(Regex.IsMatch(channel, @"[1-6]."))
                     {
-                        // Only handle these channels under LNTYPE 1.
-                        if (!lnTypeTwo)
-                        {
-                            ConvertNotes(pulseToIndex, channel);
-                        }
+                        channels.Add(channel);
                     }
                     else if (channel == "02")
                     {
@@ -224,6 +224,95 @@ namespace TechmaniaConverter
 
                 // Unknown command.
                 ignoredCommands.Add(command);
+            }
+
+            // Map channels to lanes.
+            int laneForChannel01 = 0;
+            const string kTooManyChannels = "Too many channels in .bms, unable to convert. Please choose a .bms with fewer channels, such as SP instead of DP, 7-key instead of 9-key.";
+            foreach (string channel in channels)
+            {
+                if (laneForChannel01 >= maxLanes)
+                {
+                    throw new Exception(kTooManyChannels);
+                }
+                channelToLane[channel] = laneForChannel01;
+                laneForChannel01++;
+            }
+
+            // 2nd pass: Notes. 1x-6x are mapped to the lanes in channelToLane,
+            // 01 is mapped to all remaining lanes.
+            reader = new StringReader(bms);
+            int currentMeasure = 0;
+            int repetitionsOnMeasure = 0;
+            while (true)
+            {
+                string line = reader.ReadLine();
+                if (line == null) break;
+                line = line.Trim();
+                if (line == "") continue;
+                if (line[0] != '#') continue;
+
+                // Find command.
+                int delimIndex = line.IndexOfAny(delim);
+                string command, remainder;
+                if (delimIndex == -1)
+                {
+                    continue;
+                }
+                else
+                {
+                    command = line.Substring(0, delimIndex);
+                    remainder = line.Substring(delimIndex + 1);
+                }
+
+                if (command.Length != 6 || !Regex.IsMatch(command,
+                    @"#[0-9][0-9][0-9][0-6][A-Z0-9]"))
+                {
+                    continue;
+                }
+
+                int measure = int.Parse(command.Substring(1, 3));
+                string channel = command.Substring(4, 2);
+
+                // Parse all indices in this measure+channel.
+                List<Tuple<int, string>> pulseToIndex = new List<Tuple<int, string>>();
+                int denom = remainder.Length / 2;
+                for (int num = 0; num < denom; num++)
+                {
+                    string index = remainder.Substring(num * 2, 2);
+                    if (index == "00") continue;
+                    int pulse = measure * pulsesPerScan + num * pulsesPerScan / denom;
+                    pulseToIndex.Add(new Tuple<int, string>(pulse, index));
+                }
+
+                if (channel == "01")
+                {
+                    if (measure == currentMeasure)
+                    {
+                        repetitionsOnMeasure++;
+                    }
+                    else
+                    {
+                        currentMeasure = measure;
+                        repetitionsOnMeasure = 1;
+                    }
+
+                    int targetLane = laneForChannel01 + repetitionsOnMeasure - 1;
+                    if (targetLane >= maxLanes)
+                    {
+                        throw new Exception(kTooManyChannels);
+                    }
+
+                    ConvertNotes(pulseToIndex, channel, targetLane);
+                }
+                else if (Regex.IsMatch(channel, @"[1-4]."))
+                {
+                    ConvertNotes(pulseToIndex, channel, channelToLane[channel]);
+                }
+                else if (Regex.IsMatch(channel, @"[5-6].") && !lnTypeTwo)
+                {
+                    ConvertNotes(pulseToIndex, channel, channelToLane[channel]);
+                }
             }
 
             // Calculate BGA start time, after all BPM events are recorded.
@@ -316,7 +405,7 @@ namespace TechmaniaConverter
         }
 
         private void ConvertNotes(List<Tuple<int, string>> pulseToKeysoundIndex,
-            string channel)
+            string channel, int lane)
         {
             foreach (Tuple<int, string> tuple in pulseToKeysoundIndex)
             {
@@ -371,20 +460,6 @@ namespace TechmaniaConverter
                         filename = keysoundIndexToName[index];
                     }
 
-                    // If needed, nudge pulse forward until there are <12 notes
-                    // at the current pulse.
-                    while (true)
-                    {
-                        if (!numNotesAtPulse.ContainsKey(pulse))
-                        {
-                            numNotesAtPulse.Add(pulse, 0);
-                        }
-                        if (numNotesAtPulse[pulse] < maxLanes) break;
-                        pulse++;
-                    }
-
-                    int lane = numNotesAtPulse[pulse];
-                    numNotesAtPulse[pulse]++;
                     Note note = new Note()
                     {
                         type = NoteType.Basic,
