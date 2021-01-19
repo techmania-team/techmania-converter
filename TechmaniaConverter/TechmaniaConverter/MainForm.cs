@@ -74,7 +74,7 @@ namespace TechmaniaConverter
 
             try
             {
-                tech = converter.ConvertBmsToTech(bms);
+                tech = converter.ConvertToTech(bms);
             }
             catch (Exception ex)
             {

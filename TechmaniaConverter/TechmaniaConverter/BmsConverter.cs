@@ -8,21 +8,10 @@ using System.Threading.Tasks;
 
 namespace TechmaniaConverter
 {
-    class BmsConverter
+    class BmsConverter : ConverterBase
     {
-        public string report { get; private set; }
-        public BmsConverter()
-        {
-            report = null;
-        }
-
-        private Track track;
         private Pattern pattern;
-        private int bgaStartPulse;
         private string longNoteCloser;
-        private const int bps = 4;
-        private const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
-        private const int maxLanes = 64;
 
         public Dictionary<string, string> keysoundIndexToName { get; private set; }
         private Dictionary<string, double> bpmIndexToValue;
@@ -34,9 +23,8 @@ namespace TechmaniaConverter
         private SortedSet<string> channels;  // Used channels among 10-4Z.
         private Dictionary<string, Note> channelToLastNote;
         private Dictionary<string, int> channelToLane;
-        private HashSet<string> channelsToCollapse;
 
-        public string ConvertBmsToTech(string bms)
+        public string ConvertToTech(string bms)
         {
             track = new Track("", "");  // To be filled later
             pattern = new Pattern();
@@ -56,7 +44,6 @@ namespace TechmaniaConverter
             channels = new SortedSet<string>();
             channelToLastNote = new Dictionary<string, Note>();
             channelToLane = new Dictionary<string, int>();
-            channelsToCollapse = new HashSet<string>();
 
             // Error reporting.
             HashSet<string> ignoredCommands = new HashSet<string>();
@@ -379,7 +366,7 @@ namespace TechmaniaConverter
 
         // Both input and output filenames are without path.
         // If not found, returns null.
-        public string FindFile(string filenameWithoutPath)
+        private string FindFile(string filenameWithoutPath)
         {
             List<string> acceptedFilenames = new List<string>();
             string originalExtension = Path.GetExtension(filenameWithoutPath);
