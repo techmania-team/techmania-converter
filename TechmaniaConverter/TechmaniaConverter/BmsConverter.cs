@@ -333,26 +333,22 @@ namespace TechmaniaConverter
             }
             if (meterWarning)
             {
-                writer.WriteLine("Channel 02 is not supported; conversion will assume 4/4 meter.");
-                writer.WriteLine();
+                writer.WriteLine("Channel 02 is not supported; converter will assume 4/4 meter.");
                 writer.WriteLine();
             }
             if (nonVideoBmpWarning)
             {
                 writer.WriteLine("#BMP commands that do not refer to a video will be ignored.");
                 writer.WriteLine();
-                writer.WriteLine();
             }
             if (multipleBga)
             {
                 writer.WriteLine("Found multiple notes in channel 04 that refer to videos. The 2nd and onward of these notes will be ignored.");
                 writer.WriteLine();
-                writer.WriteLine();
             }
             if (lnTypeTwo)
             {
                 writer.WriteLine("#LNTYPE 2 is not supported. All notes in channels 5x and 6x will be ignored.");
-                writer.WriteLine();
                 writer.WriteLine();
             }
             report = writer.ToString();

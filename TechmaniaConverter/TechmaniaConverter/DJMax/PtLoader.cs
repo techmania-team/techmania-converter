@@ -52,7 +52,7 @@ namespace TechmaniaConverter
             playerData.Instruments.Add(new InstrumentData()
             {
                 InsNum = 0,
-                Name = "none"
+                Name = ""
             });
 
             // read ogg instruments list

@@ -70,6 +70,7 @@ namespace TechmaniaConverter
                 return;
             }
 
+            sourceFolder = bmsFolder;
             filesToCopy = new List<string>(converter.keysoundIndexToName.Values);
             filesToCopy.AddRange(converter.bmpIndexToName.Values);
             reportTextBox.Text = converter.report;
@@ -134,7 +135,9 @@ namespace TechmaniaConverter
                 return;
             }
 
+            converter.GenerateReport();
             tech = converter.Serialize();
+            sourceFolder = ptFolder;
             filesToCopy = new List<string>(converter.allInstruments);
             reportTextBox.Text = converter.report;
             convertButton.Enabled = true;
@@ -155,6 +158,7 @@ namespace TechmaniaConverter
         }
 
         private string tech;
+        private string sourceFolder;
         private string techFolder;
         private List<string> filesToCopy;
 
@@ -199,13 +203,13 @@ namespace TechmaniaConverter
 
             Directory.CreateDirectory(techFolder);
             File.WriteAllText(Path.Combine(techFolder, "track.tech"), tech);
-            if (bmsFolder != techFolder)
+            if (sourceFolder != techFolder)
             {
                 for (int i = 0; i < filesToCopy.Count; i++)
                 {
                     string filename = filesToCopy[i];
                     if (filename == "") continue;
-                    File.Copy(Path.Combine(bmsFolder, filename),
+                    File.Copy(Path.Combine(sourceFolder, filename),
                         Path.Combine(techFolder, filename),
                         overwrite: true);
                     worker.ReportProgress(i * 100 / filesToCopy.Count);
