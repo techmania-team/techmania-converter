@@ -37,9 +37,11 @@ namespace TechmaniaConverter
             this.reportTextBox = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.loadButton = new System.Windows.Forms.Button();
+            this.loadBmsButton = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.label1 = new System.Windows.Forms.Label();
+            this.loadPtButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // techPathTextBox
@@ -97,7 +99,8 @@ namespace TechmaniaConverter
             this.reportTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.reportTextBox.Size = new System.Drawing.Size(477, 252);
             this.reportTextBox.TabIndex = 9;
-            this.reportTextBox.Text = "If anything in the .bms file is not convertable to .tech, it will show up here.";
+            this.reportTextBox.Text = "If anything in the input file(s) is not convertable to .tech, it will show up her" +
+    "e.";
             // 
             // label5
             // 
@@ -118,15 +121,15 @@ namespace TechmaniaConverter
             this.label2.TabIndex = 11;
             this.label2.Text = "Step 4:";
             // 
-            // loadButton
+            // loadBmsButton
             // 
-            this.loadButton.Location = new System.Drawing.Point(231, 12);
-            this.loadButton.Name = "loadButton";
-            this.loadButton.Size = new System.Drawing.Size(94, 29);
-            this.loadButton.TabIndex = 12;
-            this.loadButton.Text = "Load .bms...";
-            this.loadButton.UseVisualStyleBackColor = true;
-            this.loadButton.Click += new System.EventHandler(this.loadButton_Click);
+            this.loadBmsButton.Location = new System.Drawing.Point(231, 12);
+            this.loadBmsButton.Name = "loadBmsButton";
+            this.loadBmsButton.Size = new System.Drawing.Size(94, 29);
+            this.loadBmsButton.TabIndex = 12;
+            this.loadBmsButton.Text = "Load .bms...";
+            this.loadBmsButton.UseVisualStyleBackColor = true;
+            this.loadBmsButton.Click += new System.EventHandler(this.loadBmsButton_Click);
             // 
             // label6
             // 
@@ -145,14 +148,35 @@ namespace TechmaniaConverter
             this.progressBar.Size = new System.Drawing.Size(358, 29);
             this.progressBar.TabIndex = 14;
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(350, 16);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(26, 20);
+            this.label1.TabIndex = 15;
+            this.label1.Text = "or:";
+            // 
+            // loadPtButton
+            // 
+            this.loadPtButton.Location = new System.Drawing.Point(400, 12);
+            this.loadPtButton.Name = "loadPtButton";
+            this.loadPtButton.Size = new System.Drawing.Size(94, 29);
+            this.loadPtButton.TabIndex = 16;
+            this.loadPtButton.Text = "Load .pt...";
+            this.loadPtButton.UseVisualStyleBackColor = true;
+            this.loadPtButton.Click += new System.EventHandler(this.loadPtButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(748, 493);
+            this.Controls.Add(this.loadPtButton);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.loadButton);
+            this.Controls.Add(this.loadBmsButton);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.reportTextBox);
@@ -179,9 +203,11 @@ namespace TechmaniaConverter
         private System.Windows.Forms.TextBox reportTextBox;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button loadButton;
+        private System.Windows.Forms.Button loadBmsButton;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ProgressBar progressBar;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button loadPtButton;
     }
 }
 

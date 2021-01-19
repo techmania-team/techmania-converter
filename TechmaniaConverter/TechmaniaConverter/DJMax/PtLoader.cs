@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TechmaniaConverter.DJMax
+namespace TechmaniaConverter
 {
     class PtLoader
     {
-        private static PlayerData Load(string filename)
+        public static PlayerData Load(string filename)
         {
             UInt32 calcMinTick = ~0u;
 
@@ -102,7 +102,7 @@ namespace TechmaniaConverter.DJMax
                 uint eztr = stream.ReadUInt();
                 if (eztr != 0x52545A45)
                 {
-                    throw new Exception("Did not find 'EZTR' in track header.");
+                    throw new Exception("Did not find 'EZTR' in track header. Is the .pt encrypted? TECHMANIA Converter does not support decryption.");
                 }
 
                 stream.Skip(0x02);
