@@ -292,10 +292,18 @@ namespace TechmaniaConverter
             }
 
             // Calculate bga offset. Even though there's no bga.
+            pattern.PrepareForTimeCalculation();
             if (bgaStartPulse >= 0)
             {
-                pattern.PrepareForTimeCalculation();
                 pattern.patternMetadata.bgaOffset = pattern.PulseToTime(bgaStartPulse);
+            }
+
+            // Remove excessive BPM events from the beginning. Sometimes there are like 20 of them.
+            // What the heck.
+            while (pattern.bpmEvents.Count > 0 &&
+                pattern.bpmEvents[0].bpm == pattern.patternMetadata.initBpm)
+            {
+                pattern.bpmEvents.RemoveAt(0);
             }
         }
 
