@@ -89,8 +89,8 @@ namespace TechmaniaConverter
             }
 
             // 1st pass: convert all tracks by face value, except:
-            // tracks 4-7 will be processed later;
-            // tracks 8-15 are ignored.
+            // - tracks 4-7 will be processed later;
+            // - tracks 8-15 are ignored.
             foreach (TrackData t in parsedPt.Tracks)
             {
                 foreach (EventData e in t.Events)
@@ -139,10 +139,67 @@ namespace TechmaniaConverter
                 }
             }
 
-            // TODO: 2nd pass - process chain and repeat notes
+            // 2nd pass: process chain and repeat notes.
+            int chainHeadPulse = -1;
+            List<Note> convertedBasicNotes = new List<Note>();
+            int[] repeatHeadPulse = { -1, -1, -1, -1 };
+            foreach (Note n in pattern.notes)
+            {
+                if (n.lane >= 4) continue;
+                switch (n.type)
+                {
+                    case NoteType.ChainHead:
+                        chainHeadPulse = n.pulse;
+                        break;
+                    case NoteType.Basic:
+                        if (chainHeadPulse >= 0 && n.pulse > chainHeadPulse)
+                        {
+                            n.type = NoteType.ChainNode;
+                            convertedBasicNotes.Add(n);
+                        }
+                        break;
+                    case NoteType.ChainNode:
+                        chainHeadPulse = -1;
+                        // Basic notes on the same pulse shouldn't be converted.
+                        foreach (Note converted in convertedBasicNotes)
+                        {
+                            if (converted.pulse == n.pulse)
+                            {
+                                converted.type = NoteType.Basic;
+                            }
+                        }
+                        convertedBasicNotes.Clear();
+                        break;
+                    case NoteType.RepeatHead:
+                    case NoteType.RepeatHeadHold:
+                        if (repeatHeadPulse[n.lane] < 0)
+                        {
+                            // 1st repeat head. Convert all repeat heads after this one.
+                            repeatHeadPulse[n.lane] = n.pulse;
+                        }
+                        else
+                        {
+                            // Between 1st repeat head and repeat note. Convert this head.
+                            n.type = n.type switch
+                            {
+                                NoteType.RepeatHead => NoteType.Repeat,
+                                NoteType.RepeatHeadHold => NoteType.RepeatHold,
+                                _ => NoteType.Basic  // Should never happen
+                            };
+                        }
+                        break;
+                    case NoteType.Repeat:
+                    case NoteType.RepeatHold:
+                        repeatHeadPulse[n.lane] = -1;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             // TODO: 3rd pass - process special events
 
-            // Calculate bga offset.
+            // Calculate bga offset. Even though there's no bga.
             if (bgaStartPulse >= 0)
             {
                 pattern.PrepareForTimeCalculation();
@@ -153,7 +210,7 @@ namespace TechmaniaConverter
         private int TrackToLane(uint track)
         {
             if (track < 4) return (int)track;
-            return (int)track - 16;
+            return (int)track - 12;
         }
 
         private Note EventDataToNote(EventData e, Func<int, int> TickToPulse)
