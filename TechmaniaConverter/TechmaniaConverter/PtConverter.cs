@@ -23,6 +23,8 @@ namespace TechmaniaConverter
         private bool nonDefaultVolumeWarning;
         private bool nonDefaultPanWarning;
         private HashSet<int> unknownAttributes;
+        private bool endOfScanWarning;
+        private List<Tuple<string, EventData>> unknownSpecialEvents;  // Item 1 is filename
 
         public void ExtractSongIdFrom(string filename)
         {
@@ -41,6 +43,8 @@ namespace TechmaniaConverter
             nonDefaultVolumeWarning = false;
             nonDefaultPanWarning = false;
             unknownAttributes = new HashSet<int>();
+            endOfScanWarning = false;
+            unknownSpecialEvents = new List<Tuple<string, EventData>>();
         }
 
         public void ConvertAndAddPattern(string filename, PlayerData parsedPt)
@@ -91,6 +95,7 @@ namespace TechmaniaConverter
             // 1st pass: convert all tracks by face value, except:
             // - tracks 4-7 will be processed later;
             // - tracks 8-15 are ignored.
+            List<EventData> specialEvents = new List<EventData>();
             foreach (TrackData t in parsedPt.Tracks)
             {
                 foreach (EventData e in t.Events)
@@ -104,6 +109,7 @@ namespace TechmaniaConverter
                             if (e.TrackId >= 4 && e.TrackId < 8)
                             {
                                 // To be processed later.
+                                specialEvents.Add(e);
                                 break;
                             }
                             else if (e.TrackId >= 8 && e.TrackId < 16)
@@ -139,10 +145,12 @@ namespace TechmaniaConverter
                 }
             }
 
-            // 2nd pass: process chain and repeat notes.
+            // 2nd pass: process chain and repeat notes. Also collect all drag notes
+            // for the 3rd pass to use.
             int chainHeadPulse = -1;
             List<Note> convertedBasicNotes = new List<Note>();
             int[] repeatHeadPulse = { -1, -1, -1, -1 };
+            List<DragNote> allDragNotes = new List<DragNote>();
             foreach (Note n in pattern.notes)
             {
                 if (n.lane >= 4) continue;
@@ -192,12 +200,96 @@ namespace TechmaniaConverter
                     case NoteType.RepeatHold:
                         repeatHeadPulse[n.lane] = -1;
                         break;
+                    case NoteType.Drag:
+                        allDragNotes.Add(n as DragNote);
+                        break;
                     default:
                         break;
                 }
             }
 
-            // TODO: 3rd pass - process special events
+            // 3rd pass: process special events.
+            foreach (EventData e in specialEvents)
+            {
+                int pulse = TickToPulse(e.Tick);
+                int lane = (int)e.TrackId - 4;
+
+                // Does this specify an end-of-scan note?
+                if (pattern.notes.Contains(new Note()
+                {
+                    pulse = pulse,
+                    lane = lane
+                }))
+                {
+                    // This will be supported at a later version.
+                    endOfScanWarning = true;
+                    continue;
+                }
+
+                // Find the drag note that this event modifies, if any.
+                bool modifiesDragNote = false;
+                foreach (DragNote d in allDragNotes)
+                {
+                    if (d.lane != lane) continue;
+                    if (pulse < d.pulse) continue;
+                    if (pulse > d.pulse + d.Duration()) continue;
+
+                    modifiesDragNote = true;
+                    int anchorPulse = pulse - d.pulse;
+                    int anchorLane;
+                    if (e.Attribute == 0 || e.Attribute == 60)
+                    {
+                        anchorLane = 0;
+                    }
+                    else if (e.Attribute < 60)
+                    {
+                        // Curve upwards.
+                        anchorLane = -1;
+                    }
+                    else
+                    {
+                        // Curve downwards.
+                        anchorLane = 1;
+                    }
+
+                    if (d.nodes[d.nodes.Count - 1].anchor.pulse == anchorPulse)
+                    {
+                        d.nodes[d.nodes.Count - 1].anchor.lane += anchorLane;
+                    }
+                    else
+                    {
+                        d.nodes.Add(new DragNode()
+                        {
+                            anchor = new IntPoint(anchorPulse, anchorLane),
+                            controlLeft = new FloatPoint(0f, 0f),
+                            controlRight = new FloatPoint(0f, 0f)
+                        });
+                    }
+                    d.nodes.Sort((DragNode n1, DragNode n2) => n1.anchor.pulse - n2.anchor.pulse);
+                    break;
+                }
+
+                if (!modifiesDragNote)
+                {
+                    // This special event doesn't do anything.
+                    unknownSpecialEvents.Add(new Tuple<string, EventData>(filename, e));
+                }
+            }
+
+            // Give the drag notes some curve.
+            foreach (DragNote d in allDragNotes)
+            {
+                if (d.nodes.Count <= 2) continue;
+                for (int i = 1; i < d.nodes.Count - 1; i++)
+                {
+                    int prevAnchorPulse = d.nodes[i - 1].anchor.pulse;
+                    int anchorPulse = d.nodes[i].anchor.pulse;
+                    int nextAnchorPulse = d.nodes[i + 1].anchor.pulse;
+
+                    d.nodes[i].controlLeft.pulse = (prevAnchorPulse - anchorPulse) * 0.5f;
+                    d.nodes[i].controlRight.pulse = (nextAnchorPulse - anchorPulse) * 0.5f;
+                }
+            }
 
             // Calculate bga offset. Even though there's no bga.
             if (bgaStartPulse >= 0)
@@ -217,6 +309,7 @@ namespace TechmaniaConverter
         {
             int pulse = TickToPulse(e.Tick);
             int lane = TrackToLane(e.TrackId);
+            string sound = e.Instrument != null ? e.Instrument.Name : "";
             switch (e.Attribute)
             {
                 case 0:
@@ -227,7 +320,7 @@ namespace TechmaniaConverter
                             type = NoteType.Basic,
                             pulse = pulse,
                             lane = lane,
-                            sound = e.Instrument.Name
+                            sound = sound
                         };
                     }
                     else
@@ -237,7 +330,7 @@ namespace TechmaniaConverter
                             type = NoteType.Drag,
                             pulse = pulse,
                             lane = lane,
-                            sound = e.Instrument.Name
+                            sound = sound
                         };
                         dragNote.nodes.Add(new DragNode());
                         dragNote.nodes.Add(new DragNode());
@@ -250,7 +343,7 @@ namespace TechmaniaConverter
                         type = NoteType.ChainHead,
                         pulse = pulse,
                         lane = lane,
-                        sound = e.Instrument.Name
+                        sound = sound
                     };
                 case 6:
                     return new Note()
@@ -258,7 +351,7 @@ namespace TechmaniaConverter
                         type = NoteType.ChainNode,
                         pulse = pulse,
                         lane = lane,
-                        sound = e.Instrument.Name
+                        sound = sound
                     };
                 case 10:
                     if (e.Duration == 6)
@@ -268,7 +361,7 @@ namespace TechmaniaConverter
                             type = NoteType.RepeatHead,
                             pulse = pulse,
                             lane = lane,
-                            sound = e.Instrument.Name
+                            sound = sound
                         };
                     }
                     else
@@ -278,7 +371,7 @@ namespace TechmaniaConverter
                             type = NoteType.RepeatHeadHold,
                             pulse = pulse,
                             lane = lane,
-                            sound = e.Instrument.Name,
+                            sound = sound,
                             duration = TickToPulse(e.Duration)
                         };
                     }
@@ -290,7 +383,7 @@ namespace TechmaniaConverter
                             type = NoteType.Repeat,
                             pulse = pulse,
                             lane = lane,
-                            sound = e.Instrument.Name
+                            sound = sound
                         };
                     }
                     else
@@ -300,7 +393,7 @@ namespace TechmaniaConverter
                             type = NoteType.RepeatHold,
                             pulse = pulse,
                             lane = lane,
-                            sound = e.Instrument.Name,
+                            sound = sound,
                             duration = TickToPulse(e.Duration)
                         };
                     }
@@ -310,7 +403,7 @@ namespace TechmaniaConverter
                         type = NoteType.Hold,
                         pulse = pulse,
                         lane = lane,
-                        sound = e.Instrument.Name,
+                        sound = sound,
                         duration = TickToPulse(e.Duration)
                     };
                 default:
@@ -360,6 +453,20 @@ namespace TechmaniaConverter
                     writer.Write(c + ", ");
                 }
                 writer.WriteLine();
+                writer.WriteLine();
+            }
+            if (endOfScanWarning)
+            {
+                writer.WriteLine("End of scan notes are not supported, and will be ignored.");
+                writer.WriteLine();
+            }
+            if (unknownSpecialEvents.Count > 0)
+            {
+                writer.WriteLine("The following special notes modify neither an end-of-scan note or a drag note. These special notes have no meaning, and will be ignored:");
+                foreach (Tuple<string, EventData> tuple in unknownSpecialEvents)
+                {
+                    writer.WriteLine($"{tuple.Item1}, tick {tuple.Item2.Tick}, track {tuple.Item2.TrackId}");
+                }
                 writer.WriteLine();
             }
             report = writer.ToString();
