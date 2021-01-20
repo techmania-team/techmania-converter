@@ -310,7 +310,12 @@ namespace TechmaniaConverter
         private int TrackToLane(uint track)
         {
             if (track < 4) return (int)track;
-            return (int)track - 12;
+            int lane = (int)track - 12;
+            if (lane >= maxLanes)
+            {
+                throw new Exception("Too many tracks in .pt, unable to convert. Please choose a .pt with fewer tracks.");
+            }
+            return lane;
         }
 
         private Note EventDataToNote(EventData e, Func<int, int> TickToPulse)
