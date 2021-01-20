@@ -83,7 +83,9 @@ namespace DJMaxEditor.DJMax
 
         private void NoteAdded(object sender, EventArgs e)
         {
-            Events = m_trackData.SelectMany(x => x.Events).OrderBy(x => x.Tick).ToArray();
+            // This project does not use TrackList.Events, so there's no need to
+            // re-sort the entire list on every note added.
+            // Events = m_trackData.SelectMany(x => x.Events).OrderBy(x => x.Tick).ToArray();
             TriggerEventAdded(null);
         }
 
