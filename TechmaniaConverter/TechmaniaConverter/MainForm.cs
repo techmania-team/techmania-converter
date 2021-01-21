@@ -116,8 +116,9 @@ namespace TechmaniaConverter
             }
 
             // Extract song ID. This sadly is the only piece of metadata we can get from pts.
+            // Calling ToLower because surprise surprise, regex is case sensitive.
             PtConverter converter = new PtConverter();
-            converter.ExtractSongIdFrom(Path.GetFileName(fullPaths[0]));
+            converter.ExtractSongIdFrom(Path.GetFileName(fullPaths[0]).ToLower());
 
             // Load and parse the pt files.
             try
@@ -126,7 +127,7 @@ namespace TechmaniaConverter
                 {
                     string filename = Path.GetFileName(fullPath);
                     DJMaxEditor.DJMax.PlayerData parsedPt = PtLoader.Load(fullPath);
-                    converter.ConvertAndAddPattern(filename, parsedPt);
+                    converter.ConvertAndAddPattern(filename.ToLower(), parsedPt);
                 }
             }
             catch (Exception ex)
