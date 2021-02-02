@@ -326,7 +326,7 @@ namespace TechmaniaConverter
             switch (e.Attribute)
             {
                 case 0:
-                    if (e.Duration == 6)
+                    if (e.Duration <= 6)
                     {
                         return new Note()
                         {
@@ -367,7 +367,7 @@ namespace TechmaniaConverter
                         sound = sound
                     };
                 case 10:
-                    if (e.Duration == 6)
+                    if (e.Duration <= 6)
                     {
                         return new Note()
                         {
@@ -389,7 +389,7 @@ namespace TechmaniaConverter
                         };
                     }
                 case 11:
-                    if (e.Duration == 6)
+                    if (e.Duration <= 6)
                     {
                         return new Note()
                         {
