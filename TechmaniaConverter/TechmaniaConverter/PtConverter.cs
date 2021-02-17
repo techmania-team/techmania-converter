@@ -20,7 +20,6 @@ namespace TechmaniaConverter
         private bool typeFourWarning;
         private bool playerTwoWarning;
         private HashSet<int> unknownAttributes;
-        private bool endOfScanWarning;
         private List<Tuple<string, EventData>> unknownSpecialEvents;  // Item 1 is filename
 
         public void ExtractSongIdFrom(string filename)
@@ -37,7 +36,6 @@ namespace TechmaniaConverter
             typeFourWarning = false;
             playerTwoWarning = false;
             unknownAttributes = new HashSet<int>();
-            endOfScanWarning = false;
             unknownSpecialEvents = new List<Tuple<string, EventData>>();
         }
 
@@ -211,14 +209,10 @@ namespace TechmaniaConverter
                 int lane = (int)e.TrackId - 4;
 
                 // Does this specify an end-of-scan note?
-                if (pattern.notes.Contains(new Note()
+                Note modifiedNote = pattern.GetNoteAt(pulse, lane);
+                if (modifiedNote != null)
                 {
-                    pulse = pulse,
-                    lane = lane
-                }))
-                {
-                    // This will be supported at a later version.
-                    endOfScanWarning = true;
+                    modifiedNote.endOfScan = true;
                     continue;
                 }
 
@@ -231,21 +225,15 @@ namespace TechmaniaConverter
                     if (pulse > d.pulse + d.Duration()) continue;
 
                     modifiesDragNote = true;
-                    int anchorPulse = pulse - d.pulse;
-                    int anchorLane;
+                    float anchorPulse = pulse - d.pulse;
+                    float anchorLane;
                     if (e.Attribute == 0 || e.Attribute == 60)
                     {
                         anchorLane = 0;
                     }
-                    else if (e.Attribute < 60)
-                    {
-                        // Curve upwards.
-                        anchorLane = -1;
-                    }
                     else
                     {
-                        // Curve downwards.
-                        anchorLane = 1;
+                        anchorLane = e.Attribute / 60f - 1f;
                     }
 
                     if (d.nodes[d.nodes.Count - 1].anchor.pulse == anchorPulse)
@@ -492,11 +480,6 @@ namespace TechmaniaConverter
                     writer.Write(c + ", ");
                 }
                 writer.WriteLine();
-                writer.WriteLine();
-            }
-            if (endOfScanWarning)
-            {
-                writer.WriteLine("End of scan notes are not supported, and will be ignored.");
                 writer.WriteLine();
             }
             if (unknownSpecialEvents.Count > 0)

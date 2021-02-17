@@ -12,7 +12,7 @@ namespace TechmaniaConverter
 
         protected Track track;
         protected int bgaStartPulse;
-        protected const int bps = 4;
+        protected const int bps = Pattern.defaultBps;
         protected const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
         protected const int maxLanes = 64;
     }
