@@ -158,6 +158,30 @@ public partial class Pattern
         foreach (Note n in notes)
         {
             n.time = PulseToTime(n.pulse);
+            if (n is HoldNote)
+            {
+                HoldNote h = n as HoldNote;
+                h.endTime = PulseToTime(h.pulse + h.duration);
+                /*
+                if (Ruleset.instance != null)
+                {
+                    h.gracePeriodStart = h.endTime -
+                        Ruleset.instance.longNoteGracePeriod;
+                }
+                */
+            }
+            if (n is DragNote)
+            {
+                DragNote d = n as DragNote;
+                d.endTime = PulseToTime(d.pulse + d.Duration());
+                /*
+                if (Ruleset.instance != null)
+                {
+                    d.gracePeriodStart = d.endTime -
+                        Ruleset.instance.longNoteGracePeriod;
+                }
+                */
+            }
         }
     }
 

@@ -17,11 +17,8 @@ namespace TechmaniaConverter
 
         // Error reporting.
         private bool typeZeroWarning;
-        private bool typeTwoWarning;
         private bool typeFourWarning;
         private bool playerTwoWarning;
-        private bool nonDefaultVolumeWarning;
-        private bool nonDefaultPanWarning;
         private HashSet<int> unknownAttributes;
         private bool endOfScanWarning;
         private List<Tuple<string, EventData>> unknownSpecialEvents;  // Item 1 is filename
@@ -37,11 +34,8 @@ namespace TechmaniaConverter
             track = new Track(match.Groups[1].Value, "");
             allInstruments = new HashSet<string>();
             typeZeroWarning = false;
-            typeTwoWarning = false;
             typeFourWarning = false;
             playerTwoWarning = false;
-            nonDefaultVolumeWarning = false;
-            nonDefaultPanWarning = false;
             unknownAttributes = new HashSet<int>();
             endOfScanWarning = false;
             unknownSpecialEvents = new List<Tuple<string, EventData>>();
@@ -96,10 +90,12 @@ namespace TechmaniaConverter
             // - tracks 4-7 will be processed later;
             // - tracks 8-15 are ignored.
             List<EventData> specialEvents = new List<EventData>();
+            Dictionary<uint, float> trackVolume = new Dictionary<uint, float>();
             foreach (TrackData t in parsedPt.Tracks)
             {
                 foreach (EventData e in t.Events)
                 {
+                    // Conveniently, events in a track are sorted by tick.
                     switch (e.EventType)
                     {
                         case EventType.None:
@@ -122,14 +118,14 @@ namespace TechmaniaConverter
                                 bgaStartPulse = TickToPulse(e.Tick);
                                 break;
                             }
-                            Note note = EventDataToNote(e, TickToPulse);
+                            Note note = EventDataToNote(e, TickToPulse, trackVolume);
                             if (note != null)
                             {
                                 pattern.notes.Add(note);
                             }
                             break;
                         case EventType.Volume:
-                            typeTwoWarning = true;
+                            trackVolume[e.TrackId] = IntVolumeToFloat(e.Volume);
                             break;
                         case EventType.Tempo:
                             pattern.bpmEvents.Add(new BpmEvent()
@@ -260,12 +256,12 @@ namespace TechmaniaConverter
                     {
                         d.nodes.Add(new DragNode()
                         {
-                            anchor = new IntPoint(anchorPulse, anchorLane),
+                            anchor = new FloatPoint(anchorPulse, anchorLane),
                             controlLeft = new FloatPoint(0f, 0f),
                             controlRight = new FloatPoint(0f, 0f)
                         });
                     }
-                    d.nodes.Sort((DragNode n1, DragNode n2) => n1.anchor.pulse - n2.anchor.pulse);
+                    d.nodes.Sort((DragNode n1, DragNode n2) => MathF.Sign(n1.anchor.pulse - n2.anchor.pulse));
                     break;
                 }
 
@@ -282,9 +278,9 @@ namespace TechmaniaConverter
                 if (d.nodes.Count <= 2) continue;
                 for (int i = 1; i < d.nodes.Count - 1; i++)
                 {
-                    int prevAnchorPulse = d.nodes[i - 1].anchor.pulse;
-                    int anchorPulse = d.nodes[i].anchor.pulse;
-                    int nextAnchorPulse = d.nodes[i + 1].anchor.pulse;
+                    float prevAnchorPulse = d.nodes[i - 1].anchor.pulse;
+                    float anchorPulse = d.nodes[i].anchor.pulse;
+                    float nextAnchorPulse = d.nodes[i + 1].anchor.pulse;
 
                     d.nodes[i].controlLeft.pulse = (prevAnchorPulse - anchorPulse) * 0.5f;
                     d.nodes[i].controlRight.pulse = (nextAnchorPulse - anchorPulse) * 0.5f;
@@ -307,7 +303,20 @@ namespace TechmaniaConverter
             }
         }
 
-        private int TrackToLane(uint track)
+        private static float IntVolumeToFloat(int v)
+        {
+            return MathF.Pow(v / 127f, 1.5f);
+        }
+
+        private static float IntPanToFloat(int p)
+        {
+            p -= 64;
+            if (p < 0) return -MathF.Pow(-p / 64f, 0.25f);
+            if (p > 0) return MathF.Pow(p / 63f, 0.25f);
+            return 0f;
+        }
+
+        private static int TrackToLane(uint track)
         {
             if (track < 4) return (int)track;
             int lane = (int)track - 12;
@@ -318,11 +327,16 @@ namespace TechmaniaConverter
             return lane;
         }
 
-        private Note EventDataToNote(EventData e, Func<int, int> TickToPulse)
+        private Note EventDataToNote(EventData e, Func<int, int> TickToPulse,
+            Dictionary<uint, float> trackVolume)
         {
             int pulse = TickToPulse(e.Tick);
             int lane = TrackToLane(e.TrackId);
             string sound = e.Instrument != null ? e.Instrument.Name : "";
+            float volumeBase = trackVolume.ContainsKey(e.TrackId) ?
+                trackVolume[e.TrackId] : 1f;
+            float volume = IntVolumeToFloat(e.Vel) * volumeBase;
+            float pan = IntPanToFloat(e.Pan);
             switch (e.Attribute)
             {
                 case 0:
@@ -333,7 +347,10 @@ namespace TechmaniaConverter
                             type = NoteType.Basic,
                             pulse = pulse,
                             lane = lane,
-                            sound = sound
+                            sound = sound,
+                            volume = volume,
+                            pan = pan,
+                            endOfScan = false
                         };
                     }
                     else
@@ -343,7 +360,10 @@ namespace TechmaniaConverter
                             type = NoteType.Drag,
                             pulse = pulse,
                             lane = lane,
-                            sound = sound
+                            sound = sound,
+                            volume = volume,
+                            pan = pan,
+                            endOfScan = false
                         };
                         dragNote.nodes.Add(new DragNode());
                         dragNote.nodes.Add(new DragNode());
@@ -356,7 +376,10 @@ namespace TechmaniaConverter
                         type = NoteType.ChainHead,
                         pulse = pulse,
                         lane = lane,
-                        sound = sound
+                        sound = sound,
+                        volume = volume,
+                        pan = pan,
+                        endOfScan = false
                     };
                 case 6:
                     return new Note()
@@ -364,7 +387,10 @@ namespace TechmaniaConverter
                         type = NoteType.ChainNode,
                         pulse = pulse,
                         lane = lane,
-                        sound = sound
+                        sound = sound,
+                        volume = volume,
+                        pan = pan,
+                        endOfScan = false
                     };
                 case 10:
                     if (e.Duration <= 6)
@@ -374,7 +400,10 @@ namespace TechmaniaConverter
                             type = NoteType.RepeatHead,
                             pulse = pulse,
                             lane = lane,
-                            sound = sound
+                            sound = sound,
+                            volume = volume,
+                            pan = pan,
+                            endOfScan = false
                         };
                     }
                     else
@@ -385,7 +414,10 @@ namespace TechmaniaConverter
                             pulse = pulse,
                             lane = lane,
                             sound = sound,
-                            duration = TickToPulse(e.Duration)
+                            duration = TickToPulse(e.Duration),
+                            volume = volume,
+                            pan = pan,
+                            endOfScan = false
                         };
                     }
                 case 11:
@@ -396,7 +428,10 @@ namespace TechmaniaConverter
                             type = NoteType.Repeat,
                             pulse = pulse,
                             lane = lane,
-                            sound = sound
+                            sound = sound,
+                            volume = volume,
+                            pan = pan,
+                            endOfScan = false
                         };
                     }
                     else
@@ -407,7 +442,10 @@ namespace TechmaniaConverter
                             pulse = pulse,
                             lane = lane,
                             sound = sound,
-                            duration = TickToPulse(e.Duration)
+                            duration = TickToPulse(e.Duration),
+                            volume = volume,
+                            pan = pan,
+                            endOfScan = false
                         };
                     }
                 case 12:
@@ -417,7 +455,10 @@ namespace TechmaniaConverter
                         pulse = pulse,
                         lane = lane,
                         sound = sound,
-                        duration = TickToPulse(e.Duration)
+                        duration = TickToPulse(e.Duration),
+                        volume = volume,
+                        pan = pan,
+                        endOfScan = false
                     };
                 default:
                     unknownAttributes.Add(e.Attribute);
@@ -433,11 +474,6 @@ namespace TechmaniaConverter
                 writer.WriteLine("Events of type 0 (None) are not supported, and will be ignored.");
                 writer.WriteLine();
             }
-            if (typeTwoWarning)
-            {
-                writer.WriteLine("Events of type 2 (Volume) are not supported, and will be ignored. All notes will play at default volume.");
-                writer.WriteLine();
-            }
             if (typeFourWarning)
             {
                 writer.WriteLine("Events of type 4 (Beat) are not supported, and will be ignored. Converter will assume 4/4 meter.");
@@ -446,16 +482,6 @@ namespace TechmaniaConverter
             if (playerTwoWarning)
             {
                 writer.WriteLine("Events on tracks 8-15 (P2 visible and P2 special) are not supported, and will be ignored.");
-                writer.WriteLine();
-            }
-            if (nonDefaultVolumeWarning)
-            {
-                writer.WriteLine("Volume on notes are not supported, and will be ignored. All notes will play at default volume.");
-                writer.WriteLine();
-            }
-            if (nonDefaultPanWarning)
-            {
-                writer.WriteLine("Pan on notes are not supported, and will be ignored. All notes will play at default pan.");
                 writer.WriteLine();
             }
             if (unknownAttributes.Count > 0)
@@ -491,7 +517,7 @@ namespace TechmaniaConverter
 
         public string Serialize()
         {
-            return track.Serialize();
+            return track.Serialize(optimizeForSaving: true);
         }
     }
 }

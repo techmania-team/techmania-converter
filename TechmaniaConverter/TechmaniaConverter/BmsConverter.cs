@@ -357,7 +357,7 @@ namespace TechmaniaConverter
                 report = "No problems found.";
             }
 
-            return track.Serialize();
+            return track.Serialize(optimizeForSaving: true);
         }
 
         // Both input and output filenames are without path.
