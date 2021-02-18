@@ -42,6 +42,7 @@ namespace TechmaniaConverter
             this.okButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -185,11 +186,21 @@ namespace TechmaniaConverter
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Pan curve";
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 488);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(252, 40);
+            this.label1.TabIndex = 16;
+            this.label1.Text = "New options will apply the next time\r\nyou load .pt files.";
+            // 
             // PtOptionsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(329, 504);
+            this.ClientSize = new System.Drawing.Size(329, 538);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.okButton);
@@ -223,5 +234,6 @@ namespace TechmaniaConverter
         private System.Windows.Forms.Button okButton;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Label label1;
     }
 }
