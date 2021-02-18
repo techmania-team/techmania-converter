@@ -293,15 +293,42 @@ namespace TechmaniaConverter
 
         private static float IntVolumeToFloat(int v)
         {
-            return MathF.Pow(v / 127f, 1.5f);
+            float normalized = v / 127f;
+            if (PtOptions.volumeCurve == CurveType.Exponential)
+            {
+                return MathF.Pow(normalized, PtOptions.volumeParam);
+            }
+            else
+            {
+                return MathF.Log(normalized, PtOptions.volumeParam);
+            }
         }
 
         private static float IntPanToFloat(int p)
         {
             p -= 64;
-            if (p < 0) return -MathF.Pow(-p / 64f, 0.25f);
-            if (p > 0) return MathF.Pow(p / 63f, 0.25f);
-            return 0f;
+            if (p == 0) return 0f;
+            float sign;
+            float normalized;
+            if (p < 0)
+            {
+                sign = -1f;
+                normalized = -p / 64f;
+            }
+            else
+            {
+                sign = 1f;
+                normalized = p / 63f;
+            }
+
+            if (PtOptions.panCurve == CurveType.Exponential)
+            {
+                return MathF.Pow(normalized, PtOptions.panParam) * sign;
+            }
+            else
+            {
+                return MathF.Log(normalized, PtOptions.panParam) * sign;
+            }
         }
 
         private static int TrackToLane(uint track)
@@ -323,6 +350,7 @@ namespace TechmaniaConverter
             string sound = e.Instrument != null ? e.Instrument.Name : "";
             float volumeBase = trackVolume.ContainsKey(e.TrackId) ?
                 trackVolume[e.TrackId] : 1f;
+            if (PtOptions.ignoreVolumeNotes) volumeBase = 1f;
             float volume = IntVolumeToFloat(e.Vel) * volumeBase;
             float pan = IntPanToFloat(e.Pan);
             switch (e.Attribute)

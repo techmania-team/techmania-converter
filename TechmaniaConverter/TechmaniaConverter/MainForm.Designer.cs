@@ -29,6 +29,7 @@ namespace TechmaniaConverter
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.techPathTextBox = new System.Windows.Forms.TextBox();
             this.techBrowseButton = new System.Windows.Forms.Button();
             this.convertButton = new System.Windows.Forms.Button();
@@ -42,6 +43,7 @@ namespace TechmaniaConverter
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
             this.loadPtButton = new System.Windows.Forms.Button();
+            this.ptOptionsButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // techPathTextBox
@@ -167,11 +169,23 @@ namespace TechmaniaConverter
             this.loadPtButton.UseVisualStyleBackColor = true;
             this.loadPtButton.Click += new System.EventHandler(this.loadPtButton_Click);
             // 
+            // ptOptionsButton
+            // 
+            this.ptOptionsButton.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("ptOptionsButton.BackgroundImage")));
+            this.ptOptionsButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.ptOptionsButton.Location = new System.Drawing.Point(512, 12);
+            this.ptOptionsButton.Name = "ptOptionsButton";
+            this.ptOptionsButton.Size = new System.Drawing.Size(30, 30);
+            this.ptOptionsButton.TabIndex = 17;
+            this.ptOptionsButton.UseVisualStyleBackColor = true;
+            this.ptOptionsButton.Click += new System.EventHandler(this.ptOptionsButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(748, 493);
+            this.Controls.Add(this.ptOptionsButton);
             this.Controls.Add(this.loadPtButton);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.progressBar);
@@ -208,6 +222,7 @@ namespace TechmaniaConverter
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button loadPtButton;
+        private System.Windows.Forms.Button ptOptionsButton;
     }
 }
 

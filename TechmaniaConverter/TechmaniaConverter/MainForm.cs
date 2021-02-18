@@ -220,5 +220,11 @@ namespace TechmaniaConverter
             worker.ReportProgress(100);
         }
         #endregion
+
+        private void ptOptionsButton_Click(object sender, EventArgs e)
+        {
+            PtOptionsForm optionsForm = new PtOptionsForm();
+            optionsForm.ShowDialog();
+        }
     }
 }
