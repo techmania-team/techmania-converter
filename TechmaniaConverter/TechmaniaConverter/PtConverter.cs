@@ -456,45 +456,40 @@ namespace TechmaniaConverter
 
         public void GenerateReport()
         {
-            StringWriter writer = new StringWriter();
+            reportWriter = new StringWriter();
             if (typeZeroWarning)
             {
-                writer.WriteLine("Events of type 0 (None) are not supported, and will be ignored.");
-                writer.WriteLine();
+                reportWriter.WriteLine("Events of type 0 (None) are not supported, and will be ignored.");
+                reportWriter.WriteLine();
             }
             if (typeFourWarning)
             {
-                writer.WriteLine("Events of type 4 (Beat) are not supported, and will be ignored. Converter will assume 4/4 meter.");
-                writer.WriteLine();
+                reportWriter.WriteLine("Events of type 4 (Beat) are not supported, and will be ignored. Converter will assume 4/4 meter.");
+                reportWriter.WriteLine();
             }
             if (playerTwoWarning)
             {
-                writer.WriteLine("Events on tracks 8-15 (P2 visible and P2 special) are not supported, and will be ignored.");
-                writer.WriteLine();
+                reportWriter.WriteLine("Events on tracks 8-15 (P2 visible and P2 special) are not supported, and will be ignored.");
+                reportWriter.WriteLine();
             }
             if (unknownAttributes.Count > 0)
             {
-                writer.WriteLine("The following event attributes are not recognized, and events with these attributes will be ignored:");
+                reportWriter.WriteLine("The following event attributes are not recognized, and events with these attributes will be ignored:");
                 foreach (int c in unknownAttributes)
                 {
-                    writer.Write(c + ", ");
+                    reportWriter.Write(c + ", ");
                 }
-                writer.WriteLine();
-                writer.WriteLine();
+                reportWriter.WriteLine();
+                reportWriter.WriteLine();
             }
             if (unknownSpecialEvents.Count > 0)
             {
-                writer.WriteLine("The following special notes modify neither an end-of-scan note or a drag note. These special notes have no meaning, and will be ignored:");
+                reportWriter.WriteLine("The following special notes modify neither an end-of-scan note or a drag note. These special notes have no meaning, and will be ignored:");
                 foreach (Tuple<string, EventData> tuple in unknownSpecialEvents)
                 {
-                    writer.WriteLine($"{tuple.Item1}, tick {tuple.Item2.Tick}, track {tuple.Item2.TrackId}");
+                    reportWriter.WriteLine($"{tuple.Item1}, tick {tuple.Item2.Tick}, track {tuple.Item2.TrackId}");
                 }
-                writer.WriteLine();
-            }
-            report = writer.ToString();
-            if (report == "")
-            {
-                report = "No problems found.";
+                reportWriter.WriteLine();
             }
         }
 

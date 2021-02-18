@@ -310,51 +310,46 @@ namespace TechmaniaConverter
             }
 
             // Generate warning message.
-            StringWriter writer = new StringWriter();
+            reportWriter = new StringWriter();
             if (ignoredCommands.Count > 0)
             {
-                writer.WriteLine("The following commands are not supported, and will be ignored:");
+                reportWriter.WriteLine("The following commands are not supported, and will be ignored:");
                 foreach (string c in ignoredCommands)
                 {
-                    writer.Write(c + ", ");
+                    reportWriter.Write(c + ", ");
                 }
-                writer.WriteLine();
-                writer.WriteLine();
+                reportWriter.WriteLine();
+                reportWriter.WriteLine();
             }
             if (ignoredChannels.Count > 0)
             {
-                writer.WriteLine("The following channels are not supported, and will be ignored:");
+                reportWriter.WriteLine("The following channels are not supported, and will be ignored:");
                 foreach (string c in ignoredChannels)
                 {
-                    writer.Write(c + ", ");
+                    reportWriter.Write(c + ", ");
                 }
-                writer.WriteLine();
-                writer.WriteLine();
+                reportWriter.WriteLine();
+                reportWriter.WriteLine();
             }
             if (meterWarning)
             {
-                writer.WriteLine("Channel 02 is not supported; converter will assume 4/4 meter.");
-                writer.WriteLine();
+                reportWriter.WriteLine("Channel 02 is not supported; converter will assume 4/4 meter.");
+                reportWriter.WriteLine();
             }
             if (nonVideoBmpWarning)
             {
-                writer.WriteLine("#BMP commands that do not refer to a video will be ignored.");
-                writer.WriteLine();
+                reportWriter.WriteLine("#BMP commands that do not refer to a video will be ignored.");
+                reportWriter.WriteLine();
             }
             if (multipleBga)
             {
-                writer.WriteLine("Found multiple notes in channel 04 that refer to videos. The 2nd and onward of these notes will be ignored.");
-                writer.WriteLine();
+                reportWriter.WriteLine("Found multiple notes in channel 04 that refer to videos. The 2nd and onward of these notes will be ignored.");
+                reportWriter.WriteLine();
             }
             if (lnTypeTwo)
             {
-                writer.WriteLine("#LNTYPE 2 is not supported. All notes in channels 5x and 6x will be ignored.");
-                writer.WriteLine();
-            }
-            report = writer.ToString();
-            if (report == "")
-            {
-                report = "No problems found.";
+                reportWriter.WriteLine("#LNTYPE 2 is not supported. All notes in channels 5x and 6x will be ignored.");
+                reportWriter.WriteLine();
             }
 
             return track.Serialize(optimizeForSaving: true);

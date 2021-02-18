@@ -73,7 +73,7 @@ namespace TechmaniaConverter
             sourceFolder = bmsFolder;
             filesToCopy = new List<string>(converter.keysoundIndexToName.Values);
             filesToCopy.AddRange(converter.bmpIndexToName.Values);
-            reportTextBox.Text = converter.report;
+            reportTextBox.Text = converter.GetReport();
             convertButton.Enabled = true;
         }
         #endregion
@@ -137,10 +137,11 @@ namespace TechmaniaConverter
             }
 
             converter.GenerateReport();
+            reportTextBox.Text = converter.GetReport();
+
             tech = converter.Serialize();
             sourceFolder = ptFolder;
             filesToCopy = new List<string>(converter.allInstruments);
-            reportTextBox.Text = converter.report;
             convertButton.Enabled = true;
         }
         #endregion
