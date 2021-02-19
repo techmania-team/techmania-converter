@@ -291,17 +291,32 @@ namespace TechmaniaConverter
             }
         }
 
+        // Transforms [0, 1] to [0, 1] based on the given curve type and parameter. Output is clamped.
+        private static float ApplyCurve(float input, CurveType type, float param)
+        {
+            float output = input;
+            switch (type)
+            {
+                case CurveType.Exponential:
+                    output = MathF.Pow(input, param);
+                    break;
+                case CurveType.Logarithmic:
+                    output = MathF.Log(input, param) + 1f;
+                    break;
+            }
+            if (float.IsNaN(output))
+            {
+                throw new ArgumentException("Unexpected NaN. Please make sure that parameters are within their valid ranges.");
+            }
+            if (output < 0f) return 0f;
+            if (output > 1f) return 1f;
+            return output;
+        }
+
         private static float IntVolumeToFloat(int v)
         {
             float normalized = v / 127f;
-            if (PtOptions.volumeCurve == CurveType.Exponential)
-            {
-                return MathF.Pow(normalized, PtOptions.volumeParam);
-            }
-            else
-            {
-                return MathF.Log(normalized, PtOptions.volumeParam);
-            }
+            return ApplyCurve(normalized, PtOptions.volumeCurve, PtOptions.volumeParam);
         }
 
         private static float IntPanToFloat(int p)
@@ -321,14 +336,7 @@ namespace TechmaniaConverter
                 normalized = p / 63f;
             }
 
-            if (PtOptions.panCurve == CurveType.Exponential)
-            {
-                return MathF.Pow(normalized, PtOptions.panParam) * sign;
-            }
-            else
-            {
-                return MathF.Log(normalized, PtOptions.panParam) * sign;
-            }
+            return ApplyCurve(normalized, PtOptions.panCurve, PtOptions.panParam) * sign;
         }
 
         private static int TrackToLane(uint track)
