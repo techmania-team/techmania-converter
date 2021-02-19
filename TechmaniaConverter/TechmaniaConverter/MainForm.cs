@@ -62,7 +62,7 @@ namespace TechmaniaConverter
 
             try
             {
-                tech = converter.ConvertToTech(bms);
+                converter.ConvertAndStore(bms);
             }
             catch (Exception ex)
             {
@@ -70,10 +70,15 @@ namespace TechmaniaConverter
                 return;
             }
 
+            FindTechFolder(converter.track.trackMetadata);
+            string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
+                + converter.GetReport();
+            reportTextBox.Text = report;
+
+            tech = converter.Serialize();
             sourceFolder = bmsFolder;
             filesToCopy = new List<string>(converter.keysoundIndexToName.Values);
             filesToCopy.AddRange(converter.bmpIndexToName.Values);
-            reportTextBox.Text = converter.GetReport();
             convertButton.Enabled = true;
         }
         #endregion
@@ -137,7 +142,10 @@ namespace TechmaniaConverter
             }
 
             converter.GenerateReport();
-            reportTextBox.Text = converter.GetReport();
+            FindTechFolder(converter.track.trackMetadata);
+            string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
+                + converter.GetReport();
+            reportTextBox.Text = report;
 
             tech = converter.Serialize();
             sourceFolder = ptFolder;
@@ -147,26 +155,50 @@ namespace TechmaniaConverter
         #endregion
 
         #region Output
-        private void techBrowseButton_Click(object sender, EventArgs e)
+        private void trackFolderBrowseButton_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
-            dialog.Description = "Save converted track to:";
+            dialog.Description = "Specify TECHMANIA's Tracks folder:";
             dialog.ShowNewFolderButton = true;
             dialog.UseDescriptionForTitle = true;
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                techPathTextBox.Text = dialog.SelectedPath;
+                trackFolderTextBox.Text = dialog.SelectedPath;
+                tracksFolder = trackFolderTextBox.Text;
             }
+        }
+
+        private void FindTechFolder(TrackMetadata trackMetadata)
+        {
+            string filteredTitle = FilterString(trackMetadata.title);
+            string filteredArtist = FilterString(trackMetadata.artist);
+            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            techFolder = Path.Combine(tracksFolder, $"{filteredArtist} - {filteredTitle} - {timestamp}");
+        }
+
+        private static string FilterString(string input)
+        {
+            StringBuilder builder = new StringBuilder();
+            const string invalidChars = "\\/*:?\"<>|";
+            foreach (char c in input)
+            {
+                if (!invalidChars.Contains(c.ToString()))
+                {
+                    builder.Append(c);
+                }
+            }
+            return builder.ToString();
         }
 
         private string tech;
         private string sourceFolder;
+        private string tracksFolder;
         private string techFolder;
         private List<string> filesToCopy;
 
         private void convertButton_Click(object sender, EventArgs e)
         {
-            techFolder = techPathTextBox.Text;
             convertButton.Enabled = false;
             progressBar.Value = 0;
 

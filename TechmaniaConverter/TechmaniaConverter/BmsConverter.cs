@@ -24,7 +24,7 @@ namespace TechmaniaConverter
         private Dictionary<string, Note> channelToLastNote;
         private Dictionary<string, int> channelToLane;
 
-        public string ConvertToTech(string bms)
+        public void ConvertAndStore(string bms)
         {
             track = new Track("", "");  // To be filled later
             pattern = new Pattern();
@@ -351,8 +351,6 @@ namespace TechmaniaConverter
                 reportWriter.WriteLine("#LNTYPE 2 is not supported. All notes in channels 5x and 6x will be ignored.");
                 reportWriter.WriteLine();
             }
-
-            return track.Serialize(optimizeForSaving: true);
         }
 
         // Both input and output filenames are without path.

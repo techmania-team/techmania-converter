@@ -291,6 +291,7 @@ namespace TechmaniaConverter
             }
         }
 
+        #region Volume and pan
         // Transforms [0, 1] to [0, 1] based on the given curve type and parameter. Output is clamped.
         private static float ApplyCurve(float input, CurveType type, float param)
         {
@@ -338,6 +339,7 @@ namespace TechmaniaConverter
 
             return ApplyCurve(normalized, PtOptions.panCurve, PtOptions.panParam) * sign;
         }
+        #endregion
 
         private static int TrackToLane(uint track)
         {
@@ -527,11 +529,6 @@ namespace TechmaniaConverter
                 }
                 reportWriter.WriteLine();
             }
-        }
-
-        public string Serialize()
-        {
-            return track.Serialize(optimizeForSaving: true);
         }
     }
 }

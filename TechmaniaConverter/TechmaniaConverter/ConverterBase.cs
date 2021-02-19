@@ -17,10 +17,15 @@ namespace TechmaniaConverter
             return report;
         }
 
-        protected Track track;
+        public Track track { get; protected set; }
         protected int bgaStartPulse;
         protected const int bps = Pattern.defaultBps;
         protected const int pulsesPerScan = Pattern.pulsesPerBeat * bps;
         protected const int maxLanes = 64;
+
+        public string Serialize()
+        {
+            return track.Serialize(optimizeForSaving: true);
+        }
     }
 }

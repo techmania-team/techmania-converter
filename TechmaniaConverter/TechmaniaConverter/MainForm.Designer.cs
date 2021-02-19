@@ -30,8 +30,8 @@ namespace TechmaniaConverter
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.techPathTextBox = new System.Windows.Forms.TextBox();
-            this.techBrowseButton = new System.Windows.Forms.Button();
+            this.trackFolderTextBox = new System.Windows.Forms.TextBox();
+            this.trackFolderBrowseButton = new System.Windows.Forms.Button();
             this.convertButton = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -39,34 +39,34 @@ namespace TechmaniaConverter
             this.label5 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.loadBmsButton = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
             this.loadPtButton = new System.Windows.Forms.Button();
             this.ptOptionsButton = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // techPathTextBox
+            // trackFolderTextBox
             // 
-            this.techPathTextBox.Location = new System.Drawing.Point(231, 398);
-            this.techPathTextBox.Name = "techPathTextBox";
-            this.techPathTextBox.Size = new System.Drawing.Size(377, 27);
-            this.techPathTextBox.TabIndex = 3;
+            this.trackFolderTextBox.Location = new System.Drawing.Point(165, 50);
+            this.trackFolderTextBox.Name = "trackFolderTextBox";
+            this.trackFolderTextBox.Size = new System.Drawing.Size(377, 27);
+            this.trackFolderTextBox.TabIndex = 3;
             // 
-            // techBrowseButton
+            // trackFolderBrowseButton
             // 
-            this.techBrowseButton.Location = new System.Drawing.Point(614, 398);
-            this.techBrowseButton.Name = "techBrowseButton";
-            this.techBrowseButton.Size = new System.Drawing.Size(94, 29);
-            this.techBrowseButton.TabIndex = 5;
-            this.techBrowseButton.Text = "Browse...";
-            this.techBrowseButton.UseVisualStyleBackColor = true;
-            this.techBrowseButton.Click += new System.EventHandler(this.techBrowseButton_Click);
+            this.trackFolderBrowseButton.Location = new System.Drawing.Point(559, 49);
+            this.trackFolderBrowseButton.Name = "trackFolderBrowseButton";
+            this.trackFolderBrowseButton.Size = new System.Drawing.Size(94, 29);
+            this.trackFolderBrowseButton.TabIndex = 5;
+            this.trackFolderBrowseButton.Text = "Browse...";
+            this.trackFolderBrowseButton.UseVisualStyleBackColor = true;
+            this.trackFolderBrowseButton.Click += new System.EventHandler(this.trackFolderBrowseButton_Click);
             // 
             // convertButton
             // 
             this.convertButton.Enabled = false;
-            this.convertButton.Location = new System.Drawing.Point(231, 446);
+            this.convertButton.Location = new System.Drawing.Point(165, 482);
             this.convertButton.Name = "convertButton";
             this.convertButton.Size = new System.Drawing.Size(94, 29);
             this.convertButton.TabIndex = 6;
@@ -79,27 +79,27 @@ namespace TechmaniaConverter
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(12, 16);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(54, 20);
+            this.label3.Size = new System.Drawing.Size(294, 20);
             this.label3.TabIndex = 7;
-            this.label3.Text = "Step 1:";
+            this.label3.Text = "Step 1: Specify TECHMANIA\'s Tracks folder.";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 67);
+            this.label4.Location = new System.Drawing.Point(13, 118);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(137, 20);
+            this.label4.Size = new System.Drawing.Size(54, 20);
             this.label4.TabIndex = 8;
-            this.label4.Text = "Step 2: Read report";
+            this.label4.Text = "Step 2:";
             // 
             // reportTextBox
             // 
-            this.reportTextBox.Location = new System.Drawing.Point(231, 64);
+            this.reportTextBox.Location = new System.Drawing.Point(165, 175);
             this.reportTextBox.Multiline = true;
             this.reportTextBox.Name = "reportTextBox";
             this.reportTextBox.ReadOnly = true;
             this.reportTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.reportTextBox.Size = new System.Drawing.Size(477, 252);
+            this.reportTextBox.Size = new System.Drawing.Size(488, 252);
             this.reportTextBox.TabIndex = 9;
             this.reportTextBox.Text = "If anything in the input file(s) is not convertable to .tech, it will show up her" +
     "e.";
@@ -107,25 +107,24 @@ namespace TechmaniaConverter
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(13, 340);
+            this.label5.Location = new System.Drawing.Point(13, 178);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(720, 20);
+            this.label5.Size = new System.Drawing.Size(140, 20);
             this.label5.TabIndex = 10;
-            this.label5.Text = "Step 3: If OK with the report, specify output folder. It should be a subfolder of" +
-    " TECHMANIA\'s \"Tracks\" folder.";
+            this.label5.Text = "Step 3: Read report.";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(12, 450);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(54, 20);
+            this.label2.Size = new System.Drawing.Size(196, 20);
             this.label2.TabIndex = 11;
-            this.label2.Text = "Step 4:";
+            this.label2.Text = "Step 4: If OK with the report:";
             // 
             // loadBmsButton
             // 
-            this.loadBmsButton.Location = new System.Drawing.Point(231, 12);
+            this.loadBmsButton.Location = new System.Drawing.Point(165, 114);
             this.loadBmsButton.Name = "loadBmsButton";
             this.loadBmsButton.Size = new System.Drawing.Size(94, 29);
             this.loadBmsButton.TabIndex = 12;
@@ -133,19 +132,9 @@ namespace TechmaniaConverter
             this.loadBmsButton.UseVisualStyleBackColor = true;
             this.loadBmsButton.Click += new System.EventHandler(this.loadBmsButton_Click);
             // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.ForeColor = System.Drawing.Color.Red;
-            this.label6.Location = new System.Drawing.Point(62, 360);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(313, 20);
-            this.label6.TabIndex = 13;
-            this.label6.Text = "Existing files in this folder may be overwritten.";
-            // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(350, 446);
+            this.progressBar.Location = new System.Drawing.Point(295, 482);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(358, 29);
             this.progressBar.TabIndex = 14;
@@ -153,7 +142,7 @@ namespace TechmaniaConverter
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(350, 16);
+            this.label1.Location = new System.Drawing.Point(280, 118);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(26, 20);
             this.label1.TabIndex = 15;
@@ -161,7 +150,7 @@ namespace TechmaniaConverter
             // 
             // loadPtButton
             // 
-            this.loadPtButton.Location = new System.Drawing.Point(400, 12);
+            this.loadPtButton.Location = new System.Drawing.Point(321, 114);
             this.loadPtButton.Name = "loadPtButton";
             this.loadPtButton.Size = new System.Drawing.Size(94, 29);
             this.loadPtButton.TabIndex = 16;
@@ -173,23 +162,32 @@ namespace TechmaniaConverter
             // 
             this.ptOptionsButton.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("ptOptionsButton.BackgroundImage")));
             this.ptOptionsButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.ptOptionsButton.Location = new System.Drawing.Point(512, 12);
+            this.ptOptionsButton.Location = new System.Drawing.Point(421, 114);
             this.ptOptionsButton.Name = "ptOptionsButton";
             this.ptOptionsButton.Size = new System.Drawing.Size(30, 30);
             this.ptOptionsButton.TabIndex = 17;
             this.ptOptionsButton.UseVisualStyleBackColor = true;
             this.ptOptionsButton.Click += new System.EventHandler(this.ptOptionsButton_Click);
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(13, 553);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(248, 20);
+            this.label6.TabIndex = 18;
+            this.label6.Text = "Restart from step 2 to convert more.";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(748, 493);
+            this.ClientSize = new System.Drawing.Size(677, 597);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.ptOptionsButton);
             this.Controls.Add(this.loadPtButton);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.progressBar);
-            this.Controls.Add(this.label6);
             this.Controls.Add(this.loadBmsButton);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label5);
@@ -197,8 +195,8 @@ namespace TechmaniaConverter
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.convertButton);
-            this.Controls.Add(this.techBrowseButton);
-            this.Controls.Add(this.techPathTextBox);
+            this.Controls.Add(this.trackFolderBrowseButton);
+            this.Controls.Add(this.trackFolderTextBox);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "MainForm";
@@ -209,8 +207,8 @@ namespace TechmaniaConverter
         }
 
         #endregion
-        private System.Windows.Forms.TextBox techPathTextBox;
-        private System.Windows.Forms.Button techBrowseButton;
+        private System.Windows.Forms.TextBox trackFolderTextBox;
+        private System.Windows.Forms.Button trackFolderBrowseButton;
         private System.Windows.Forms.Button convertButton;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
@@ -218,11 +216,11 @@ namespace TechmaniaConverter
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button loadBmsButton;
-        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button loadPtButton;
         private System.Windows.Forms.Button ptOptionsButton;
+        private System.Windows.Forms.Label label6;
     }
 }
 
