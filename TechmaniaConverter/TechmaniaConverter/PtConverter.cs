@@ -317,7 +317,7 @@ namespace TechmaniaConverter
         private static float IntVolumeToFloat(int v)
         {
             float normalized = v / 127f;
-            return ApplyCurve(normalized, PtOptions.volumeCurve, PtOptions.volumeParam);
+            return ApplyCurve(normalized, PtOptions.instance.volumeCurve, PtOptions.instance.volumeParam);
         }
 
         private static float IntPanToFloat(int p)
@@ -337,7 +337,7 @@ namespace TechmaniaConverter
                 normalized = p / 63f;
             }
 
-            return ApplyCurve(normalized, PtOptions.panCurve, PtOptions.panParam) * sign;
+            return ApplyCurve(normalized, PtOptions.instance.panCurve, PtOptions.instance.panParam) * sign;
         }
         #endregion
 
@@ -360,7 +360,7 @@ namespace TechmaniaConverter
             string sound = e.Instrument != null ? e.Instrument.Name : "";
             float volumeBase = trackVolume.ContainsKey(e.TrackId) ?
                 trackVolume[e.TrackId] : 1f;
-            if (PtOptions.ignoreVolumeNotes) volumeBase = 1f;
+            if (PtOptions.instance.ignoreVolumeNotes) volumeBase = 1f;
             float volume = IntVolumeToFloat(e.Vel) * volumeBase;
             float pan = IntPanToFloat(e.Pan);
             switch (e.Attribute)

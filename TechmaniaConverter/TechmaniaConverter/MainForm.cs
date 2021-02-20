@@ -16,6 +16,7 @@ namespace TechmaniaConverter
         public MainForm()
         {
             InitializeComponent();
+            PtOptionsForm.LoadOrCreateOptions();
         }
 
         #region Bms input

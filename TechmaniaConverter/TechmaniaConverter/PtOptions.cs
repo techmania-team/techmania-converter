@@ -12,15 +12,17 @@ namespace TechmaniaConverter
         Logarithmic
     }
 
-    static class PtOptions
+    public class PtOptions
     {
-        public static CurveType volumeCurve;
-        public static float volumeParam;  // Exponent for exponential curve, base for logarithmic curve
-        public static CurveType panCurve;
-        public static float panParam;
-        public static bool ignoreVolumeNotes;
+        public static PtOptions instance;
 
-        static PtOptions()
+        public CurveType volumeCurve;
+        public float volumeParam;  // Exponent for exponential curve, base for logarithmic curve
+        public CurveType panCurve;
+        public float panParam;
+        public bool ignoreVolumeNotes;
+
+        public PtOptions()
         {
             volumeCurve = CurveType.Exponential;
             volumeParam = 1.5f;
