@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace TechmaniaConverter
 {
@@ -13,7 +14,7 @@ namespace TechmaniaConverter
     {
         public HashSet<string> allInstruments { get; private set; }
 
-        private const string unrecognizedFilenameMessage = "The file name must be in format <song_id>_<mode>_<level>.pt, where <mode> is either 'star' or 'pop', and <level> is one of '1', '2', '3' or '4'.";
+        private const string unrecognizedFilenameMessage = "The file name must be in format <song_name>_<mode>_<level>.pt, where <mode> is either 'star' or 'pop', and <level> is one of '1', '2', '3' or '4'.";
 
         // Error reporting.
         private bool typeZeroWarning;
@@ -22,7 +23,8 @@ namespace TechmaniaConverter
         private HashSet<int> unknownAttributes;
         private List<Tuple<string, EventData>> unknownSpecialEvents;  // Item 1 is filename
 
-        public void ExtractSongIdFrom(string filename)
+        #region Metadata
+        public void ExtractShortNameFrom(string filename)
         {
             Match match = Regex.Match(filename, @"(.*)_(star|pop)_[1-4]\.pt");
             if (!match.Success)
@@ -37,8 +39,110 @@ namespace TechmaniaConverter
             playerTwoWarning = false;
             unknownAttributes = new HashSet<int>();
             unknownSpecialEvents = new List<Tuple<string, EventData>>();
+
+            reportWriter = new StringWriter();
         }
 
+        // Assumes that the csv file exists.
+        private string[] FindLineInCsv(string csvPath, string shortName)
+        {
+            string[] lines = File.ReadAllLines(csvPath);
+            foreach (string line in lines)
+            {
+                string[] splits = line.Split(new char[] { ',', '\t' });
+                if (splits[1] == shortName)
+                {
+                    return splits;
+                }
+            }
+            return null;
+        }
+
+        private void SetPatternLevel(string patternName, string level)
+        {
+            Pattern p = track.patterns.Find(p => p.patternMetadata.patternName == patternName);
+            if (p != null)
+            {
+                p.patternMetadata.level = int.Parse(level);
+            }
+        }
+
+        private void SetPatternScrollSpeed(string patternName, string sp)
+        {
+            Pattern p = track.patterns.Find(p => p.patternMetadata.patternName == patternName);
+            if (p != null)
+            {
+                p.patternMetadata.bps = (sp == "1" ? 8 : 4);
+            }
+        }
+
+        public void SearchForMetadata(string ptFolderString)
+        {
+            Folder ptFolder = new Folder(ptFolderString);
+            string shortName = track.trackMetadata.title;
+
+            Folder resourceFolder = ptFolder.GoUp().GoUp().Open("Resource");
+            Folder discInfoFolder = resourceFolder.Open("DiscInfo");
+            string discstockPath = discInfoFolder.OpenFile("discstock.csv");
+            if (File.Exists(discstockPath))
+            {
+                reportWriter.WriteLine("Found discstock.csv.");
+                string[] line = FindLineInCsv(discstockPath, shortName);
+                if (line != null)
+                {
+                    reportWriter.WriteLine("Found title, artist, genre and difficulty levels.");
+                    track.trackMetadata.title = line[2];
+                    track.trackMetadata.genre = line[3];
+                    track.trackMetadata.artist = line[4];
+                    SetPatternLevel("Star NM", line[^8]);
+                    SetPatternLevel("Star HD", line[^7]);
+                    SetPatternLevel("Star MX", line[^6]);
+                    SetPatternLevel("Star EX", line[^5]);
+                    SetPatternLevel("Pop NM", line[^4]);
+                    SetPatternLevel("Pop HD", line[^3]);
+                    SetPatternLevel("Pop MX", line[^2]);
+                    SetPatternLevel("Pop EX", line[^1]);
+                }
+                else
+                {
+                    reportWriter.WriteLine($"But did not find title, artist, genre and difficulty levels for {shortName}.");
+                }
+            }
+
+            string[] starStageFiles = { "star_stage_1.csv", "star_stage_2.csv", "star_stage_3.csv", "star_stage_bonus.csv" };
+            string[] popStageFiles = { "pop_stage_1.csv", "pop_stage_2.csv", "pop_stage_3.csv", "pop_stage_bonus.csv" };
+            foreach (string starStageFilename in starStageFiles)
+            {
+                string starStagePath = discInfoFolder.OpenFile(starStageFilename);
+                if (!File.Exists(starStagePath)) continue;
+                string[] line = FindLineInCsv(starStagePath, shortName);
+                if (line == null) continue;
+
+                reportWriter.WriteLine("Found scroll speed for Star patterns.");
+                SetPatternScrollSpeed("Star NM", line[2]);
+                SetPatternScrollSpeed("Star HD", line[5]);
+                SetPatternScrollSpeed("Star MX", line[8]);
+                SetPatternScrollSpeed("Star EX", line[11]);
+            }
+            foreach (string popStageFilename in popStageFiles)
+            {
+                string popStagePath = discInfoFolder.OpenFile(popStageFilename);
+                if (!File.Exists(popStagePath)) continue;
+                string[] line = FindLineInCsv(popStagePath, shortName);
+                if (line == null) continue;
+
+                reportWriter.WriteLine("Found scroll speed for Pop patterns.");
+                SetPatternScrollSpeed("Pop NM", line[2]);
+                SetPatternScrollSpeed("Pop HD", line[5]);
+                SetPatternScrollSpeed("Pop MX", line[8]);
+                SetPatternScrollSpeed("Pop EX", line[11]);
+            }
+
+            reportWriter.WriteLine();
+        }
+        #endregion
+
+        #region Conversion
         public void ConvertAndAddPattern(string filename, PlayerData parsedPt)
         {
             Match match = Regex.Match(filename, @"(.*)_(star|pop)_([1-4])\.pt");
@@ -491,10 +595,12 @@ namespace TechmaniaConverter
                     return null;
             }
         }
+        #endregion
 
         public void GenerateReport()
         {
-            reportWriter = new StringWriter();
+            if (reportWriter == null) reportWriter = new StringWriter();
+
             if (typeZeroWarning)
             {
                 reportWriter.WriteLine("Events of type 0 (None) are not supported, and will be ignored.");

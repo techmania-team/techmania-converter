@@ -106,8 +106,15 @@ namespace TechmaniaConverter
             List<string> fullPaths = new List<string>();
             try
             {
-                fullPaths.AddRange(Directory.GetFiles(ptFolder, "*_star_?.pt"));
-                fullPaths.AddRange(Directory.GetFiles(ptFolder, "*_pop_?.pt"));
+                // GetFiles is case insensitive.
+                foreach (string file in Directory.EnumerateFiles(ptFolder, "*_star_?.pt"))
+                {
+                    fullPaths.Add(file.ToLower());
+                }
+                foreach (string file in Directory.EnumerateFiles(ptFolder, "*_pop_?.pt"))
+                {
+                    fullPaths.Add(file.ToLower());
+                }
             }
             catch (Exception ex)
             {
@@ -121,20 +128,22 @@ namespace TechmaniaConverter
                 return;
             }
 
-            // Extract song ID. This sadly is the only piece of metadata we can get from pts.
-            // Calling ToLower because surprise surprise, regex is case sensitive.
             PtConverter converter = new PtConverter();
-            converter.ExtractSongIdFrom(Path.GetFileName(fullPaths[0]).ToLower());
-
-            // Load and parse the pt files.
             try
             {
+                // Extract the song's short name. This is the only guaranteed piece of metadata we can get.
+                converter.ExtractShortNameFrom(Path.GetFileName(fullPaths[0]));
+
+                // Load and parse the pt files.
                 foreach (string fullPath in fullPaths)
                 {
                     string filename = Path.GetFileName(fullPath);
                     DJMaxEditor.DJMax.PlayerData parsedPt = PtLoader.Load(fullPath);
-                    converter.ConvertAndAddPattern(filename.ToLower(), parsedPt);
+                    converter.ConvertAndAddPattern(filename, parsedPt);
                 }
+
+                // Search for any other metadata we can find.
+                converter.SearchForMetadata(ptFolder);
             }
             catch (Exception ex)
             {
