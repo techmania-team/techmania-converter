@@ -77,9 +77,17 @@ namespace TechmaniaConverter
             reportTextBox.Text = report;
 
             tech = converter.Serialize();
-            sourceFolder = bmsFolder;
-            filesToCopy = new List<string>(converter.keysoundIndexToName.Values);
-            filesToCopy.AddRange(converter.bmpIndexToName.Values);
+            filesToCopy = new List<Tuple<string, string>>();
+            foreach (string file in converter.keysoundIndexToName.Values)
+            {
+                filesToCopy.Add(new Tuple<string, string>(
+                    Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
+            }
+            foreach (string file in converter.bmpIndexToName.Values)
+            {
+                filesToCopy.Add(new Tuple<string, string>(
+                    Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
+            }
             convertButton.Enabled = true;
         }
         #endregion
@@ -158,8 +166,16 @@ namespace TechmaniaConverter
             reportTextBox.Text = report;
 
             tech = converter.Serialize();
-            sourceFolder = ptFolder;
-            filesToCopy = new List<string>(converter.allInstruments);
+            filesToCopy = new List<Tuple<string, string>>();
+            foreach (string file in converter.allInstruments)
+            {
+                filesToCopy.Add(new Tuple<string, string>(
+                    Path.Combine(ptFolder, file), Path.Combine(techFolder, file)));
+            }
+            if (converter.discImagePaths != null) filesToCopy.Add(converter.discImagePaths);
+            if (converter.eyecatchPaths != null) filesToCopy.Add(converter.eyecatchPaths);
+            if (converter.previewPaths != null) filesToCopy.Add(converter.previewPaths);
+            // TODO: convert BGA.
             convertButton.Enabled = true;
         }
         #endregion
@@ -202,10 +218,9 @@ namespace TechmaniaConverter
         }
 
         private string tech;
-        private string sourceFolder;
         private string tracksFolder;
         private string techFolder;
-        private List<string> filesToCopy;
+        private List<Tuple<string, string>> filesToCopy;  // Full paths.
 
         private void convertButton_Click(object sender, EventArgs e)
         {
@@ -247,17 +262,13 @@ namespace TechmaniaConverter
 
             Directory.CreateDirectory(techFolder);
             File.WriteAllText(Path.Combine(techFolder, "track.tech"), tech);
-            if (sourceFolder != techFolder)
+            for (int i = 0; i < filesToCopy.Count; i++)
             {
-                for (int i = 0; i < filesToCopy.Count; i++)
-                {
-                    string filename = filesToCopy[i];
-                    if (filename == "") continue;
-                    File.Copy(Path.Combine(sourceFolder, filename),
-                        Path.Combine(techFolder, filename),
-                        overwrite: true);
-                    worker.ReportProgress(i * 100 / filesToCopy.Count);
-                }
+                string source = filesToCopy[i].Item1;
+                string dest = filesToCopy[i].Item2;
+                if (source == dest) continue;
+                File.Copy(source, dest, overwrite: true);
+                worker.ReportProgress(i * 100 / filesToCopy.Count);
             }
             worker.ReportProgress(100);
         }

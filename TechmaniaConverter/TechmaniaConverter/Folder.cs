@@ -32,6 +32,11 @@ namespace TechmaniaConverter
             return new Folder(Path.Combine(folder, subfolder));
         }
 
+        public bool Exists()
+        {
+            return Directory.Exists(folder);
+        }
+
         public string OpenFile(string filename)
         {
             if (folder == null || filename == null) return null;
