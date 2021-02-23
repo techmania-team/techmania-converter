@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -168,6 +169,7 @@ namespace TechmaniaConverter
             // Collect files to write, copy and/or convert.
             tech = converter.Serialize();
             filesToCopy = new List<Tuple<string, string>>();
+            filesToConvert = new List<Tuple<string, string>>();
             foreach (string file in converter.allInstruments)
             {
                 filesToCopy.Add(new Tuple<string, string>(
@@ -190,14 +192,15 @@ namespace TechmaniaConverter
             }
             if (converter.bgaPath != null)
             {
+                Tuple<string, string> bgaTuple = new Tuple<string, string>(converter.bgaPath,
+                    Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.bga));
                 if (converter.bgaConversionRequired)
                 {
-                    // TODO: convert BGA.
+                    filesToConvert.Add(bgaTuple);
                 }
                 else
                 {
-                    filesToCopy.Add(new Tuple<string, string>(converter.bgaPath,
-                        Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.bga)));
+                    filesToCopy.Add(bgaTuple);
                 }
             }
             convertButton.Enabled = true;
@@ -245,6 +248,7 @@ namespace TechmaniaConverter
         private string tracksFolder;
         private string techFolder;
         private List<Tuple<string, string>> filesToCopy;  // Full paths.
+        private List<Tuple<string, string>> filesToConvert;  // Full paths.
 
         private void convertButton_Click(object sender, EventArgs e)
         {
@@ -286,13 +290,55 @@ namespace TechmaniaConverter
 
             Directory.CreateDirectory(techFolder);
             File.WriteAllText(Path.Combine(techFolder, "track.tech"), tech);
-            for (int i = 0; i < filesToCopy.Count; i++)
+
+            int numTasks = filesToCopy.Count + filesToConvert.Count;
+            int tasksDone = 0;
+            foreach (Tuple<string, string> pair in filesToCopy)
             {
-                string source = filesToCopy[i].Item1;
-                string dest = filesToCopy[i].Item2;
-                if (source == dest) continue;
-                File.Copy(source, dest, overwrite: true);
-                worker.ReportProgress(i * 100 / filesToCopy.Count);
+                string source = pair.Item1;
+                string dest = pair.Item2;
+                if (source != dest)
+                {
+                    File.Copy(source, dest, overwrite: true);
+                }
+                tasksDone++;
+                worker.ReportProgress(tasksDone * 100 / numTasks);
+            }
+            foreach (Tuple<string, string> pair in filesToConvert)
+            {
+                string source = pair.Item1;
+                string dest = pair.Item2;
+                if (source != dest)
+                {
+                    StringBuilder stderr = new StringBuilder();
+                    Process p = new Process();
+                    ProcessStartInfo startInfo = p.StartInfo;
+                    startInfo.FileName = "ffmpeg";
+                    startInfo.Arguments = $"-i \"{source}\" \"{dest}\"";
+                    startInfo.CreateNoWindow = false;
+                    startInfo.ErrorDialog = true;
+                    startInfo.UseShellExecute = false;
+                    // Uncomment this to receive stderr. However, ffmpeg writes its progress to stderr, so the ffmpeg window would be empty.
+                    // startInfo.RedirectStandardError = true;
+                    p.ErrorDataReceived += (sender, args) => stderr.AppendLine(args.Data);
+
+                    p.Start();
+                    if (p == null)
+                    {
+                        throw new Exception("Failed to start video converter.");
+                    }
+                    if (startInfo.RedirectStandardError)
+                    {
+                        p.BeginErrorReadLine();
+                    }
+                    p.WaitForExit();
+                    if (p.ExitCode != 0)
+                    {
+                        throw new Exception($"Video converter reports that it has failed.");
+                    }
+                }
+                tasksDone++;
+                worker.ReportProgress(tasksDone * 100 / numTasks);
             }
             worker.ReportProgress(100);
         }
