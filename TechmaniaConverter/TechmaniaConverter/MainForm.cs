@@ -188,7 +188,18 @@ namespace TechmaniaConverter
                 filesToCopy.Add(new Tuple<string, string>(converter.previewPath,
                     Path.Combine(techFolder, converter.track.trackMetadata.previewTrack)));
             }
-            // TODO: convert BGA.
+            if (converter.bgaPath != null)
+            {
+                if (converter.bgaConversionRequired)
+                {
+                    // TODO: convert BGA.
+                }
+                else
+                {
+                    filesToCopy.Add(new Tuple<string, string>(converter.bgaPath,
+                        Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.bga)));
+                }
+            }
             convertButton.Enabled = true;
         }
         #endregion

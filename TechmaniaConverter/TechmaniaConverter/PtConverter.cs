@@ -19,12 +19,12 @@ namespace TechmaniaConverter
         public string eyecatchPath { get; private set; }
         public string previewPath { get; private set; }
         public string bgaPath { get; private set; }
+        public bool bgaConversionRequired { get; private set; }
 
         private const string unrecognizedFilenameMessage = "The file name must be in format <song_name>_<mode>_<level>.pt, where <mode> is either 'star' or 'pop', and <level> is one of '1', '2', '3' or '4'.";
 
         // Error reporting.
         private bool typeZeroWarning;
-        private bool typeFourWarning;
         private bool playerTwoWarning;
         private HashSet<int> unknownAttributes;
         private List<Tuple<string, EventData>> unknownSpecialEvents;  // Item 1 is filename
@@ -41,7 +41,6 @@ namespace TechmaniaConverter
             track = new Track(match.Groups[1].Value, "");
             allInstruments = new HashSet<string>();
             typeZeroWarning = false;
-            typeFourWarning = false;
             playerTwoWarning = false;
             unknownAttributes = new HashSet<int>();
             unknownSpecialEvents = new List<Tuple<string, EventData>>();
@@ -215,6 +214,16 @@ namespace TechmaniaConverter
                     string destinationFilename = $"{shortName}.mp4";
                     foreach (Pattern p in track.patterns) p.patternMetadata.bga = destinationFilename;
                     this.bgaPath = bgaPath;
+
+                    if (Path.GetExtension(bgaPath) == ".bik")
+                    {
+                        reportWriter.WriteLine("Conversion from .bik to .mp4 may take a few minutes.");
+                        bgaConversionRequired = true;
+                    }
+                    else
+                    {
+                        bgaConversionRequired = false;
+                    }
                 }
             }
 
@@ -317,7 +326,7 @@ namespace TechmaniaConverter
                             });
                             break;
                         case EventType.Beat:
-                            typeFourWarning = true;
+                            // Do nothing.
                             break;
                     }
                 }
@@ -684,11 +693,6 @@ namespace TechmaniaConverter
             if (typeZeroWarning)
             {
                 reportWriter.WriteLine("Events of type 0 (None) are not supported, and will be ignored.");
-                reportWriter.WriteLine();
-            }
-            if (typeFourWarning)
-            {
-                reportWriter.WriteLine("Events of type 4 (Beat) are not supported, and will be ignored. Converter will assume 4/4 meter.");
                 reportWriter.WriteLine();
             }
             if (playerTwoWarning)
