@@ -165,6 +165,7 @@ namespace TechmaniaConverter
                 + converter.GetReport();
             reportTextBox.Text = report;
 
+            // Collect files to write, copy and/or convert.
             tech = converter.Serialize();
             filesToCopy = new List<Tuple<string, string>>();
             foreach (string file in converter.allInstruments)
@@ -172,9 +173,21 @@ namespace TechmaniaConverter
                 filesToCopy.Add(new Tuple<string, string>(
                     Path.Combine(ptFolder, file), Path.Combine(techFolder, file)));
             }
-            if (converter.discImagePaths != null) filesToCopy.Add(converter.discImagePaths);
-            if (converter.eyecatchPaths != null) filesToCopy.Add(converter.eyecatchPaths);
-            if (converter.previewPaths != null) filesToCopy.Add(converter.previewPaths);
+            if (converter.discImagePath != null)
+            {
+                filesToCopy.Add(new Tuple<string, string>(converter.discImagePath,
+                    Path.Combine(techFolder, converter.track.trackMetadata.eyecatchImage)));
+            }
+            if (converter.eyecatchPath != null)
+            {
+                filesToCopy.Add(new Tuple<string, string>(converter.eyecatchPath,
+                    Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.backImage)));
+            }
+            if (converter.previewPath != null)
+            {
+                filesToCopy.Add(new Tuple<string, string>(converter.previewPath,
+                    Path.Combine(techFolder, converter.track.trackMetadata.previewTrack)));
+            }
             // TODO: convert BGA.
             convertButton.Enabled = true;
         }

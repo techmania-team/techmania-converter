@@ -14,11 +14,11 @@ namespace TechmaniaConverter
     {
         public HashSet<string> allInstruments { get; private set; }
         // Disc image in the source becomes the eyecatch in the destination.
-        public Tuple<string, string> discImagePaths { get; private set; }
+        public string discImagePath { get; private set; }
         // Eyecatch in the source becomes the background image in the destination.
-        public Tuple<string, string> eyecatchPaths { get; private set; }
-        public Tuple<string, string> previewPaths { get; private set; }
-        public Tuple<string, string> bgaPaths { get; private set; }
+        public string eyecatchPath { get; private set; }
+        public string previewPath { get; private set; }
+        public string bgaPath { get; private set; }
 
         private const string unrecognizedFilenameMessage = "The file name must be in format <song_name>_<mode>_<level>.pt, where <mode> is either 'star' or 'pop', and <level> is one of '1', '2', '3' or '4'.";
 
@@ -149,7 +149,7 @@ namespace TechmaniaConverter
 
             // Search for disc image.
             Folder discImgFolder = resourceFolder.Open("Discimg");
-            discImagePaths = null;
+            discImagePath = null;
             if (discImgFolder.Exists())
             {
                 List<string> files = new List<string>(Directory.GetFiles(discImgFolder.ToString(), $"{shortName}_?.png"));
@@ -159,14 +159,13 @@ namespace TechmaniaConverter
                     files.Sort();
                     string destinationFilename = $"{shortName}_disc.png";
                     track.trackMetadata.eyecatchImage = destinationFilename;
-                    discImagePaths = new Tuple<string, string>(files[0],
-                        Path.Combine(ptFolderString, destinationFilename));
+                    discImagePath = files[0];
                 }
             }
 
             // Search for eyecatch.
             Folder eyecatchFolder = resourceFolder.Open("Eyecatch").Open("Song");
-            eyecatchPaths = null;
+            eyecatchPath = null;
             if (eyecatchFolder.Exists())
             {
                 List<string> files = new List<string>(Directory.GetFiles(eyecatchFolder.ToString(), $"{shortName}_?.jpg"));
@@ -176,14 +175,13 @@ namespace TechmaniaConverter
                     files.Sort();
                     string destinationFilename = $"{shortName}_eyecatch.jpg";
                     foreach (Pattern p in track.patterns) p.patternMetadata.backImage = destinationFilename;
-                    eyecatchPaths = new Tuple<string, string>(files[0],
-                        Path.Combine(ptFolderString, destinationFilename));
+                    eyecatchPath = files[0];
                 }
             }
 
             // Search for preview.
             Folder previewFolder = null;
-            previewPaths = null;
+            previewPath = null;
             if (resourceFolder.Open("Preview").Exists())
             {
                 previewFolder = resourceFolder.Open("Preview");
@@ -200,14 +198,13 @@ namespace TechmaniaConverter
                     reportWriter.WriteLine($"Found preview at {previewPath}.");
                     string destinationFilename = $"{shortName}_pre.ogg";
                     track.trackMetadata.previewTrack = destinationFilename;
-                    previewPaths = new Tuple<string, string>(previewPath,
-                        Path.Combine(ptFolderString, destinationFilename));
+                    this.previewPath = previewPath;
                 }
             }
 
             // Search for BGA.
             Folder rootFolder = resourceFolder.GoUp();
-            bgaPaths = null;
+            bgaPath = null;
             for (int i = 0; i <= 20; i++)
             {
                 string folderName = i == 0 ? "Movie" : $"Movie{i}";
@@ -217,8 +214,7 @@ namespace TechmaniaConverter
                     reportWriter.WriteLine($"Found BGA at {bgaPath}.");
                     string destinationFilename = $"{shortName}.mp4";
                     foreach (Pattern p in track.patterns) p.patternMetadata.bga = destinationFilename;
-                    bgaPaths = new Tuple<string, string>(bgaPath,
-                        Path.Combine(ptFolderString, destinationFilename));
+                    this.bgaPath = bgaPath;
                 }
             }
 
