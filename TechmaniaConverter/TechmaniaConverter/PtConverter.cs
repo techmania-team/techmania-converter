@@ -14,11 +14,11 @@ namespace TechmaniaConverter
     {
         public HashSet<string> allInstruments { get; private set; }
         // Disc image in the source becomes the eyecatch in the destination.
-        public string discImagePath { get; private set; }
+        public string sourceDiscImagePath { get; private set; }
         // Eyecatch in the source becomes the background image in the destination.
-        public string eyecatchPath { get; private set; }
-        public string previewPath { get; private set; }
-        public string bgaPath { get; private set; }
+        public string sourceEyecatchPath { get; private set; }
+        public string sourcePreviewPath { get; private set; }
+        public string sourceBgaPath { get; private set; }
         public bool bgaConversionRequired { get; private set; }
 
         private const string unrecognizedFilenameMessage = "The file name must be in format <song_name>_<mode>_<level>.pt, where <mode> is either 'star' or 'pop', and <level> is one of '1', '2', '3' or '4'.";
@@ -158,39 +158,62 @@ namespace TechmaniaConverter
 
             // Search for disc image.
             Folder discImgFolder = resourceFolder.Open("Discimg");
-            discImagePath = null;
+            string destinationFilename = $"{shortName}_disc.png";
+            sourceDiscImagePath = null;
             if (discImgFolder.Exists())
             {
                 List<string> files = new List<string>(Directory.GetFiles(discImgFolder.ToString(), $"{shortName}_?.png"));
                 if (files.Count > 0)
                 {
-                    reportWriter.WriteLine($"Found disc image at {files[0]}.");
                     files.Sort();
-                    string destinationFilename = $"{shortName}_disc.png";
-                    track.trackMetadata.eyecatchImage = destinationFilename;
-                    discImagePath = files[0];
+                    sourceDiscImagePath = files[0];
                 }
+            }
+            if (sourceDiscImagePath == null)
+            {
+                string localDiscImagePath = ptFolder.OpenFile(destinationFilename);
+                if (File.Exists(localDiscImagePath))
+                {
+                    sourceDiscImagePath = localDiscImagePath;
+                }
+            }
+            if (sourceDiscImagePath != null)
+            {
+                reportWriter.WriteLine($"Found disc image at {sourceDiscImagePath}.");
+                track.trackMetadata.eyecatchImage = destinationFilename;
             }
 
             // Search for eyecatch.
             Folder eyecatchFolder = resourceFolder.Open("Eyecatch").Open("Song");
-            eyecatchPath = null;
+            destinationFilename = $"{shortName}_eyecatch.jpg";
+            sourceEyecatchPath = null;
             if (eyecatchFolder.Exists())
             {
                 List<string> files = new List<string>(Directory.GetFiles(eyecatchFolder.ToString(), $"{shortName}_?.jpg"));
                 if (files.Count > 0)
                 {
-                    reportWriter.WriteLine($"Found eyecatch image at {files[0]}.");
                     files.Sort();
-                    string destinationFilename = $"{shortName}_eyecatch.jpg";
-                    foreach (Pattern p in track.patterns) p.patternMetadata.backImage = destinationFilename;
-                    eyecatchPath = files[0];
+                    sourceEyecatchPath = files[0];
                 }
+            }
+            if (sourceEyecatchPath == null)
+            {
+                string localEyecatchPath = ptFolder.OpenFile(destinationFilename);
+                if (File.Exists(localEyecatchPath))
+                {
+                    sourceEyecatchPath = localEyecatchPath;
+                }
+            }
+            if (sourceEyecatchPath != null)
+            {
+                reportWriter.WriteLine($"Found eyecatch image at {sourceEyecatchPath}.");
+                foreach (Pattern p in track.patterns) p.patternMetadata.backImage = destinationFilename;
             }
 
             // Search for preview.
             Folder previewFolder = null;
-            previewPath = null;
+            destinationFilename = $"{shortName}_pre.ogg";
+            sourcePreviewPath = null;
             if (resourceFolder.Open("Preview").Exists())
             {
                 previewFolder = resourceFolder.Open("Preview");
@@ -204,36 +227,57 @@ namespace TechmaniaConverter
                 string previewPath = previewFolder.OpenFile($"{shortName}.ogg");
                 if (File.Exists(previewPath))
                 {
-                    reportWriter.WriteLine($"Found preview at {previewPath}.");
-                    string destinationFilename = $"{shortName}_pre.ogg";
-                    track.trackMetadata.previewTrack = destinationFilename;
-                    this.previewPath = previewPath;
+                    sourcePreviewPath = previewPath;
                 }
+            }
+            if (sourcePreviewPath == null)
+            {
+                string localPreviewPath = ptFolder.OpenFile(destinationFilename);
+                if (File.Exists(localPreviewPath))
+                {
+                    sourcePreviewPath = localPreviewPath;
+                }
+            }
+            if (sourcePreviewPath != null)
+            {
+                reportWriter.WriteLine($"Found preview at {sourcePreviewPath}.");
+                track.trackMetadata.previewTrack = destinationFilename;
             }
 
             // Search for BGA.
             Folder rootFolder = resourceFolder.GoUp();
-            bgaPath = null;
+            destinationFilename = $"{shortName}.mp4";
+            sourceBgaPath = null;
             for (int i = 0; i <= 20; i++)
             {
                 string folderName = i == 0 ? "Movie" : $"Movie{i}";
                 string bgaPath = rootFolder.Open(folderName).OpenFile($"{shortName}.bik");
                 if (File.Exists(bgaPath))
                 {
-                    reportWriter.WriteLine($"Found BGA at {bgaPath}.");
-                    string destinationFilename = $"{shortName}.mp4";
-                    foreach (Pattern p in track.patterns) p.patternMetadata.bga = destinationFilename;
-                    this.bgaPath = bgaPath;
+                    sourceBgaPath = bgaPath;
+                }
+            }
+            if (sourceBgaPath == null)
+            {
+                string localBgaPath = ptFolder.OpenFile(destinationFilename);
+                if (File.Exists(localBgaPath))
+                {
+                    sourceBgaPath = localBgaPath;
+                }
+            }
+            if (sourceBgaPath != null)
+            {
+                reportWriter.WriteLine($"Found BGA at {sourceBgaPath}.");
+                foreach (Pattern p in track.patterns) p.patternMetadata.bga = destinationFilename;
 
-                    if (Path.GetExtension(bgaPath) == ".bik")
-                    {
-                        reportWriter.WriteLine("Conversion from .bik to .mp4 may take a few minutes.");
-                        bgaConversionRequired = true;
-                    }
-                    else
-                    {
-                        bgaConversionRequired = false;
-                    }
+                if (Path.GetExtension(sourceBgaPath) == ".bik")
+                {
+                    reportWriter.WriteLine("Conversion from .bik to .mp4 may take a few minutes.");
+                    bgaConversionRequired = true;
+                }
+                else
+                {
+                    bgaConversionRequired = false;
                 }
             }
 

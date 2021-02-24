@@ -175,24 +175,24 @@ namespace TechmaniaConverter
                 filesToCopy.Add(new Tuple<string, string>(
                     Path.Combine(ptFolder, file), Path.Combine(techFolder, file)));
             }
-            if (converter.discImagePath != null)
+            if (converter.sourceDiscImagePath != null)
             {
-                filesToCopy.Add(new Tuple<string, string>(converter.discImagePath,
+                filesToCopy.Add(new Tuple<string, string>(converter.sourceDiscImagePath,
                     Path.Combine(techFolder, converter.track.trackMetadata.eyecatchImage)));
             }
-            if (converter.eyecatchPath != null)
+            if (converter.sourceEyecatchPath != null)
             {
-                filesToCopy.Add(new Tuple<string, string>(converter.eyecatchPath,
+                filesToCopy.Add(new Tuple<string, string>(converter.sourceEyecatchPath,
                     Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.backImage)));
             }
-            if (converter.previewPath != null)
+            if (converter.sourcePreviewPath != null)
             {
-                filesToCopy.Add(new Tuple<string, string>(converter.previewPath,
+                filesToCopy.Add(new Tuple<string, string>(converter.sourcePreviewPath,
                     Path.Combine(techFolder, converter.track.trackMetadata.previewTrack)));
             }
-            if (converter.bgaPath != null)
+            if (converter.sourceBgaPath != null)
             {
-                Tuple<string, string> bgaTuple = new Tuple<string, string>(converter.bgaPath,
+                Tuple<string, string> bgaTuple = new Tuple<string, string>(converter.sourceBgaPath,
                     Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.bga));
                 if (converter.bgaConversionRequired)
                 {
