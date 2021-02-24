@@ -75,9 +75,19 @@ namespace TechmaniaConverter
         private void SetPatternScrollSpeed(string patternName, string sp)
         {
             Pattern p = track.patterns.Find(p => p.patternMetadata.patternName == patternName);
-            if (p != null)
+            if (p == null) return;
+            if (sp == "2") return;
+
+            // When scroll speed is 1, bps is 8, and we need to adjust drag anchors.
+            p.patternMetadata.bps = 8;
+            foreach (Note n in p.notes)
             {
-                p.patternMetadata.bps = (sp == "1" ? 8 : 4);
+                if (n.type != NoteType.Drag) continue;
+                DragNote dragNote = n as DragNote;
+                foreach (DragNode node in dragNote.nodes)
+                {
+                    node.anchor.lane *= 0.5f;
+                }
             }
         }
 
@@ -395,7 +405,7 @@ namespace TechmaniaConverter
                 }
             }
 
-            // 3rd pass: process special events.
+            // 3rd pass: process special events. Within the same track, specialEvents are sorted by tick.
             foreach (EventData e in specialEvents)
             {
                 int pulse = TickToPulse(e.Tick);
@@ -426,12 +436,21 @@ namespace TechmaniaConverter
                     }
                     else
                     {
-                        anchorLane = e.Attribute / 60f - 1f;
+                        float distanceToPreviousNode = 0;
+                        for (int i = d.nodes.Count - 1; i >= 0; i--)
+                        {
+                            if (d.nodes[i].anchor.pulse < anchorPulse)
+                            {
+                                distanceToPreviousNode = anchorPulse - d.nodes[i].anchor.pulse;
+                                break;
+                            }
+                        }
+                        anchorLane = (e.Attribute - 60f) * distanceToPreviousNode / 5400f;
                     }
 
-                    if (d.nodes[d.nodes.Count - 1].anchor.pulse == anchorPulse)
+                    if (d.nodes[^1].anchor.pulse == anchorPulse)
                     {
-                        d.nodes[d.nodes.Count - 1].anchor.lane += anchorLane;
+                        d.nodes[^1].anchor.lane += anchorLane;
                     }
                     else
                     {
@@ -463,8 +482,8 @@ namespace TechmaniaConverter
                     float anchorPulse = d.nodes[i].anchor.pulse;
                     float nextAnchorPulse = d.nodes[i + 1].anchor.pulse;
 
-                    d.nodes[i].controlLeft.pulse = (prevAnchorPulse - anchorPulse) * 0.5f;
-                    d.nodes[i].controlRight.pulse = (nextAnchorPulse - anchorPulse) * 0.5f;
+                    d.nodes[i].controlLeft.pulse = (prevAnchorPulse - anchorPulse) * 0.3f;
+                    d.nodes[i].controlRight.pulse = (nextAnchorPulse - anchorPulse) * 0.3f;
                 }
             }
 
