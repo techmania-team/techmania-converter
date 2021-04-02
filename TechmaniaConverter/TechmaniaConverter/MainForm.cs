@@ -291,6 +291,8 @@ namespace TechmaniaConverter
             Directory.CreateDirectory(techFolder);
             File.WriteAllText(Path.Combine(techFolder, "track.tech"), tech);
 
+            if (filesToCopy == null) filesToCopy = new List<Tuple<string, string>>();
+            if (filesToConvert == null) filesToConvert = new List<Tuple<string, string>>();
             int numTasks = filesToCopy.Count + filesToConvert.Count;
             int tasksDone = 0;
             foreach (Tuple<string, string> pair in filesToCopy)
