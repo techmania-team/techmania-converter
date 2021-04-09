@@ -81,11 +81,13 @@ namespace TechmaniaConverter
             filesToCopy = new List<Tuple<string, string>>();
             foreach (string file in converter.keysoundIndexToName.Values)
             {
+                if (file == "") continue;
                 filesToCopy.Add(new Tuple<string, string>(
                     Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
             }
             foreach (string file in converter.bmpIndexToName.Values)
             {
+                if (file == "") continue;
                 filesToCopy.Add(new Tuple<string, string>(
                     Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
             }
