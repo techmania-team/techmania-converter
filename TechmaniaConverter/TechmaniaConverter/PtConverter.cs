@@ -469,7 +469,7 @@ namespace TechmaniaConverter
                 {
                     if (d.lane != lane) continue;
                     if (pulse < d.pulse) continue;
-                    if (pulse > d.pulse + d.Duration()) continue;
+                    if (pulse > d.pulse + d.nodes[^1].anchor.pulse) continue;
 
                     modifiesDragNote = true;
                     float anchorPulse = pulse - d.pulse;
@@ -504,8 +504,8 @@ namespace TechmaniaConverter
                             controlLeft = new FloatPoint(0f, 0f),
                             controlRight = new FloatPoint(0f, 0f)
                         });
+                        d.nodes.Sort((DragNode n1, DragNode n2) => MathF.Sign(n1.anchor.pulse - n2.anchor.pulse));
                     }
-                    d.nodes.Sort((DragNode n1, DragNode n2) => MathF.Sign(n1.anchor.pulse - n2.anchor.pulse));
                     break;
                 }
 
