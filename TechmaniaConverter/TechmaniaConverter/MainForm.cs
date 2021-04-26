@@ -213,7 +213,7 @@ namespace TechmaniaConverter
         private void trackFolderBrowseButton_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
-            dialog.Description = "Specify TECHMANIA's Tracks folder:";
+            dialog.Description = "Specify output folder:";
             dialog.ShowNewFolderButton = true;
             dialog.UseDescriptionForTitle = true;
             if (dialog.ShowDialog() == DialogResult.OK)

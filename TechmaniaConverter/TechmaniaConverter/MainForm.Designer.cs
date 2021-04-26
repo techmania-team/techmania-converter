@@ -79,9 +79,10 @@ namespace TechmaniaConverter
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(12, 16);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(294, 20);
+            this.label3.Size = new System.Drawing.Size(585, 20);
             this.label3.TabIndex = 7;
-            this.label3.Text = "Step 1: Specify TECHMANIA\'s Tracks folder.";
+            this.label3.Text = "Step 1: Specify output folder. It\'s usually TECHMANIA\'s Tracks folder or some sub" +
+    "folder.";
             // 
             // label4
             // 

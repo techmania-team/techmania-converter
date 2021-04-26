@@ -645,7 +645,7 @@ namespace TechmaniaConverter
                             sound = sound,
                             volume = volume,
                             pan = pan,
-                            endOfScan = false
+                            curveType = global::CurveType.BSpline
                         };
                         dragNote.nodes.Add(new DragNode());
                         dragNote.nodes.Add(new DragNode());
