@@ -516,21 +516,6 @@ namespace TechmaniaConverter
                 }
             }
 
-            // Give the drag notes some curve.
-            foreach (DragNote d in allDragNotes)
-            {
-                if (d.nodes.Count <= 2) continue;
-                for (int i = 1; i < d.nodes.Count - 1; i++)
-                {
-                    float prevAnchorPulse = d.nodes[i - 1].anchor.pulse;
-                    float anchorPulse = d.nodes[i].anchor.pulse;
-                    float nextAnchorPulse = d.nodes[i + 1].anchor.pulse;
-
-                    d.nodes[i].controlLeft.pulse = (prevAnchorPulse - anchorPulse) * 0.3f;
-                    d.nodes[i].controlRight.pulse = (nextAnchorPulse - anchorPulse) * 0.3f;
-                }
-            }
-
             // Calculate bga offset. Even though there's no bga.
             pattern.PrepareForTimeCalculation();
             if (bgaStartPulse >= 0)
