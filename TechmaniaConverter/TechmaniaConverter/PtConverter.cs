@@ -450,6 +450,13 @@ namespace TechmaniaConverter
             }
 
             // 3rd pass: process special events. Within the same track, specialEvents are sorted by tick.
+            //
+            // If a drag note is modified by any special event, the originally last node created from note duration
+            // should be deleted.
+            HashSet<DragNote> modifiedDragNotes = new HashSet<DragNote>();
+            // However, a special event at the just right pulse may overwrite this node, in which case we should NOT
+            // delete this node.
+            HashSet<DragNote> dragNotesWithLastNodeOverwritten = new HashSet<DragNote>();
             foreach (EventData e in specialEvents)
             {
                 int pulse = TickToPulse(e.Tick);
@@ -472,6 +479,7 @@ namespace TechmaniaConverter
                     if (pulse > d.pulse + d.nodes[^1].anchor.pulse) continue;
 
                     modifiesDragNote = true;
+                    modifiedDragNotes.Add(d);
                     float anchorPulse = pulse - d.pulse;
                     float anchorLane;
                     if (e.Attribute == 0 || e.Attribute == 60)
@@ -495,6 +503,7 @@ namespace TechmaniaConverter
                     if (d.nodes[^1].anchor.pulse == anchorPulse)
                     {
                         d.nodes[^1].anchor.lane += anchorLane;
+                        dragNotesWithLastNodeOverwritten.Add(d);
                     }
                     else
                     {
@@ -513,6 +522,16 @@ namespace TechmaniaConverter
                 {
                     // This special event doesn't do anything.
                     unknownSpecialEvents.Add(new Tuple<string, EventData>(filename, e));
+                }
+            }
+
+            // Delete last nodes of modified drag notes.
+            foreach (DragNote n in allDragNotes)
+            {
+                if (modifiedDragNotes.Contains(n) &&
+                    !dragNotesWithLastNodeOverwritten.Contains(n))
+                {
+                    n.nodes.RemoveAt(n.nodes.Count - 1);
                 }
             }
 
