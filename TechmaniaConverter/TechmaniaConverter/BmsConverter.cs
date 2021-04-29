@@ -14,7 +14,8 @@ namespace TechmaniaConverter
         private string longNoteCloser;
 
         public Dictionary<string, string> keysoundIndexToName { get; private set; }
-        private Dictionary<string, double> bpmIndexToValue;
+        private Dictionary<string, double> bpmIndexToValue;  // Value in pulses
+        private Dictionary<string, int> stopIndexToValue;
         public Dictionary<string, string> bmpIndexToName { get; private set; }
 
         // This does not include full paths.
@@ -40,6 +41,7 @@ namespace TechmaniaConverter
             // Lookup tables.
             keysoundIndexToName = new Dictionary<string, string>();
             bpmIndexToValue = new Dictionary<string, double>();
+            stopIndexToValue = new Dictionary<string, int>();
             bmpIndexToName = new Dictionary<string, string>();
             channels = new SortedSet<string>();
             channelToLastNote = new Dictionary<string, Note>();
@@ -159,6 +161,15 @@ namespace TechmaniaConverter
                     continue;
                 }
 
+                // STOP command: record index and stop length.
+                if (command.Length == 7 && Regex.IsMatch(command, @"#STOP.."))
+                {
+                    string index = command.Substring(5, 2);
+                    int value = int.Parse(remainder) / 48 * Pattern.pulsesPerBeat;
+                    stopIndexToValue.Add(index, value);
+                    continue;
+                }
+
                 // Measure and channel: handle supported channels.
                 if (command.Length == 6 && Regex.IsMatch(command,
                     @"#[0-9][0-9][0-9][A-Z0-9][A-Z0-9]"))
@@ -200,6 +211,10 @@ namespace TechmaniaConverter
                     else if (channel == "08")
                     {
                         ConvertIndexedBpmEvents(pulseToIndex);
+                    }
+                    else if (channel == "09")
+                    {
+                        ConvertIndexedStopEvents(pulseToIndex);
                     }
                     else
                     {
@@ -475,6 +490,21 @@ namespace TechmaniaConverter
                 {
                     pulse = pulse,
                     bpm = bpm
+                });
+            }
+        }
+
+        private void ConvertIndexedStopEvents(List<Tuple<int, string>> pulseToStopIndex)
+        {
+            foreach (Tuple<int, string> tuple in pulseToStopIndex)
+            {
+                int pulse = tuple.Item1;
+                string index = tuple.Item2;
+                int stopDuration = stopIndexToValue[index];
+                pattern.timeStops.Add(new TimeStop()
+                {
+                    pulse = pulse,
+                    duration = stopDuration
                 });
             }
         }
