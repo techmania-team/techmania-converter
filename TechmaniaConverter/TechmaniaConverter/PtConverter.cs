@@ -49,12 +49,12 @@ namespace TechmaniaConverter
         }
 
         // Assumes that the csv file exists.
-        private string[] FindLineInCsv(string csvPath, string shortName)
+        private string[] FindLineInCsv(string csvPath, char delimiter, string shortName)
         {
             string[] lines = File.ReadAllLines(csvPath);
             foreach (string line in lines)
             {
-                string[] splits = line.Split(new char[] { ',', '\t' });
+                string[] splits = line.Split(delimiter);
                 if (splits[1] == shortName)
                 {
                     return splits;
@@ -104,7 +104,7 @@ namespace TechmaniaConverter
             if (File.Exists(discstockPath))
             {
                 reportWriter.WriteLine("Found discstock.csv.");
-                string[] line = FindLineInCsv(discstockPath, shortName);
+                string[] line = FindLineInCsv(discstockPath, '\t', shortName);
                 if (line != null)
                 {
                     reportWriter.WriteLine("Found title, artist, genre and difficulty levels.");
@@ -133,7 +133,7 @@ namespace TechmaniaConverter
             {
                 string starStagePath = discInfoFolder.OpenFile(starStageFilename);
                 if (!File.Exists(starStagePath)) continue;
-                string[] line = FindLineInCsv(starStagePath, shortName);
+                string[] line = FindLineInCsv(starStagePath, ',', shortName);
                 if (line == null) continue;
 
                 reportWriter.WriteLine("Found scroll speed for Star patterns.");
@@ -146,7 +146,7 @@ namespace TechmaniaConverter
             {
                 string popStagePath = discInfoFolder.OpenFile(popStageFilename);
                 if (!File.Exists(popStagePath)) continue;
-                string[] line = FindLineInCsv(popStagePath, shortName);
+                string[] line = FindLineInCsv(popStagePath, ',', shortName);
                 if (line == null) continue;
 
                 reportWriter.WriteLine("Found scroll speed for Pop patterns.");
