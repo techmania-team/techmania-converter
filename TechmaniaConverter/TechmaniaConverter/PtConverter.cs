@@ -317,6 +317,7 @@ namespace TechmaniaConverter
             pattern.patternMetadata.controlScheme = ControlScheme.Touch;
             pattern.patternMetadata.bps = bps;
             pattern.patternMetadata.initBpm = parsedPt.Tempo;
+            pattern.patternMetadata.waitForEndOfBga = false;
             track.patterns.Add(pattern);
             bgaStartPulse = -1;
 
