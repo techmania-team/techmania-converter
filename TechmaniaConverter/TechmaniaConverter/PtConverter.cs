@@ -157,127 +157,106 @@ namespace TechmaniaConverter
             }
 
             // Search for disc image.
-            Folder discImgFolder = resourceFolder.Open("Discimg");
-            string destinationFilename = $"{shortName}_disc.png";
+            List<string> candidates = new List<string>();
             sourceDiscImagePath = null;
-            if (discImgFolder.Exists())
+            Folder discImgFolder = resourceFolder.Open("Discimg");
+            for (int i = 0; i <= 4; i++)
             {
-                List<string> files = new List<string>(Directory.GetFiles(discImgFolder.ToString(), $"{shortName}_?.png"));
-                if (files.Count > 0)
-                {
-                    files.Sort();
-                    sourceDiscImagePath = files[0];
-                }
+                candidates.Add(discImgFolder.OpenFile($"{shortName}_{i}.png"));
+                candidates.Add(discImgFolder.OpenFile($"{shortName}_{i}.jpg"));
             }
-            if (sourceDiscImagePath == null)
+            candidates.Add(ptFolder.OpenFile($"{shortName}_disc.png"));
+            candidates.Add(ptFolder.OpenFile($"{shortName}_disc.jpg"));
+            foreach (string candidate in candidates)
             {
-                string localDiscImagePath = ptFolder.OpenFile(destinationFilename);
-                if (File.Exists(localDiscImagePath))
+                if (candidate == null) continue;
+                if (File.Exists(candidate))
                 {
-                    sourceDiscImagePath = localDiscImagePath;
+                    sourceDiscImagePath = candidate;
+                    string extension = Path.GetExtension(sourceDiscImagePath); // Includes the dot
+                    string destinationFilename = $"{shortName}_disc{extension}";
+                    reportWriter.WriteLine($"Found disc image at {sourceDiscImagePath}.");
+                    track.trackMetadata.eyecatchImage = destinationFilename;
+                    break;
                 }
-            }
-            if (sourceDiscImagePath != null)
-            {
-                reportWriter.WriteLine($"Found disc image at {sourceDiscImagePath}.");
-                track.trackMetadata.eyecatchImage = destinationFilename;
             }
 
             // Search for eyecatch.
-            Folder eyecatchFolder = resourceFolder.Open("Eyecatch").Open("Song");
-            destinationFilename = $"{shortName}_eyecatch.jpg";
+            candidates.Clear();
             sourceEyecatchPath = null;
-            if (eyecatchFolder.Exists())
+            Folder eyecatchFolder = resourceFolder.Open("Eyecatch").Open("Song");
+            for (int i = 0; i <= 4; i++)
             {
-                List<string> files = new List<string>(Directory.GetFiles(eyecatchFolder.ToString(), $"{shortName}_?.jpg"));
-                if (files.Count > 0)
-                {
-                    files.Sort();
-                    sourceEyecatchPath = files[0];
-                }
+                candidates.Add(eyecatchFolder.OpenFile($"{shortName}_{i}.png"));
+                candidates.Add(eyecatchFolder.OpenFile($"{shortName}_{i}.jpg"));
             }
-            if (sourceEyecatchPath == null)
+            candidates.Add(ptFolder.OpenFile($"{shortName}_eyecatch.png"));
+            candidates.Add(ptFolder.OpenFile($"{shortName}_eyecatch.jpg"));
+            foreach (string candidate in candidates)
             {
-                string localEyecatchPath = ptFolder.OpenFile(destinationFilename);
-                if (File.Exists(localEyecatchPath))
+                if (candidate == null) continue;
+                if (File.Exists(candidate))
                 {
-                    sourceEyecatchPath = localEyecatchPath;
+                    sourceEyecatchPath = candidate;
+                    string extension = Path.GetExtension(sourceEyecatchPath); // Includes the dot
+                    string destinationFilename = $"{shortName}_eyecatch{extension}";
+                    reportWriter.WriteLine($"Found eyecatch image at {sourceEyecatchPath}.");
+                    foreach (Pattern p in track.patterns) p.patternMetadata.backImage = destinationFilename;
+                    break;
                 }
-            }
-            if (sourceEyecatchPath != null)
-            {
-                reportWriter.WriteLine($"Found eyecatch image at {sourceEyecatchPath}.");
-                foreach (Pattern p in track.patterns) p.patternMetadata.backImage = destinationFilename;
             }
 
             // Search for preview.
-            Folder previewFolder = null;
-            destinationFilename = $"{shortName}_pre.ogg";
+            candidates.Clear();
             sourcePreviewPath = null;
-            if (resourceFolder.Open("Preview").Exists())
+            candidates.Add(resourceFolder.Open("Preview").OpenFile($"{shortName}.ogg"));
+            candidates.Add(resourceFolder.Open("Previewogg").OpenFile($"{shortName}.ogg"));
+            candidates.Add(ptFolder.OpenFile($"{shortName}_pre.ogg"));
+            foreach (string candidate in candidates)
             {
-                previewFolder = resourceFolder.Open("Preview");
-            }
-            if (resourceFolder.Open("Previewogg").Exists())
-            {
-                previewFolder = resourceFolder.Open("Previewogg");
-            }
-            if (previewFolder != null)
-            {
-                string previewPath = previewFolder.OpenFile($"{shortName}.ogg");
-                if (File.Exists(previewPath))
+                if (candidate == null) continue;
+                if (File.Exists(candidate))
                 {
-                    sourcePreviewPath = previewPath;
+                    sourcePreviewPath = candidate;
+                    string extension = Path.GetExtension(sourcePreviewPath); // Includes the dot
+                    string destinationFilename = $"{shortName}_pre{extension}";
+                    reportWriter.WriteLine($"Found preview at {sourcePreviewPath}.");
+                    track.trackMetadata.previewTrack = destinationFilename;
+                    break;
                 }
-            }
-            if (sourcePreviewPath == null)
-            {
-                string localPreviewPath = ptFolder.OpenFile(destinationFilename);
-                if (File.Exists(localPreviewPath))
-                {
-                    sourcePreviewPath = localPreviewPath;
-                }
-            }
-            if (sourcePreviewPath != null)
-            {
-                reportWriter.WriteLine($"Found preview at {sourcePreviewPath}.");
-                track.trackMetadata.previewTrack = destinationFilename;
             }
 
             // Search for BGA.
-            Folder rootFolder = resourceFolder.GoUp();
-            destinationFilename = $"{shortName}.mp4";
+            candidates.Clear();
             sourceBgaPath = null;
+            Folder rootFolder = resourceFolder.GoUp();
             for (int i = 0; i <= 20; i++)
             {
                 string folderName = i == 0 ? "Movie" : $"Movie{i}";
-                string bgaPath = rootFolder.Open(folderName).OpenFile($"{shortName}.bik");
-                if (File.Exists(bgaPath))
-                {
-                    sourceBgaPath = bgaPath;
-                }
+                candidates.Add(rootFolder.Open(folderName).OpenFile($"{shortName}.bik"));
             }
-            if (sourceBgaPath == null)
+            candidates.Add(ptFolder.OpenFile($"{shortName}.mp4"));
+            foreach (string candidate in candidates)
             {
-                string localBgaPath = ptFolder.OpenFile(destinationFilename);
-                if (File.Exists(localBgaPath))
+                if (candidate == null) continue;
+                if (File.Exists(candidate))
                 {
-                    sourceBgaPath = localBgaPath;
-                }
-            }
-            if (sourceBgaPath != null)
-            {
-                reportWriter.WriteLine($"Found BGA at {sourceBgaPath}.");
-                foreach (Pattern p in track.patterns) p.patternMetadata.bga = destinationFilename;
+                    sourceBgaPath = candidate;
+                    string extension = Path.GetExtension(sourceBgaPath); // Includes the dot
+                    string destinationFilename = $"{shortName}.mp4";
+                    reportWriter.WriteLine($"Found BGA at {sourceBgaPath}.");
+                    foreach (Pattern p in track.patterns) p.patternMetadata.bga = destinationFilename;
 
-                if (Path.GetExtension(sourceBgaPath) == ".bik")
-                {
-                    reportWriter.WriteLine("Conversion from .bik to .mp4 may take a few minutes.");
-                    bgaConversionRequired = true;
-                }
-                else
-                {
-                    bgaConversionRequired = false;
+                    if (extension.ToLower() == ".bik")
+                    {
+                        reportWriter.WriteLine("Conversion from .bik to .mp4 may take a few minutes.");
+                        bgaConversionRequired = true;
+                    }
+                    else
+                    {
+                        bgaConversionRequired = false;
+                    }
+                    break;
                 }
             }
 
