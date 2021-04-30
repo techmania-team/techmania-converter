@@ -92,7 +92,7 @@ namespace TechmaniaConverter
 
         private void wikiLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("explorer", "https://github.com/techmania-team/techmania-converter/wiki/.pt-converter-options");
+            System.Diagnostics.Process.Start("explorer", "https://github.com/techmania-team/techmania-docs/blob/main/English/Converter/pt_converter_options.md");
         }
 
         private void okButton_Click(object sender, EventArgs e)

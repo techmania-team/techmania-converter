@@ -46,16 +46,17 @@ namespace TechmaniaConverter
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.star1CheckBox = new System.Windows.Forms.CheckBox();
-            this.star2CheckBox = new System.Windows.Forms.CheckBox();
-            this.star3CheckBox = new System.Windows.Forms.CheckBox();
-            this.star4CheckBox = new System.Windows.Forms.CheckBox();
-            this.pop1CheckBox = new System.Windows.Forms.CheckBox();
-            this.pop2CheckBox = new System.Windows.Forms.CheckBox();
-            this.pop3CheckBox = new System.Windows.Forms.CheckBox();
-            this.pop4CheckBox = new System.Windows.Forms.CheckBox();
             this.loadScrollSpeedFromTrack18CheckBox = new System.Windows.Forms.CheckBox();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.pop4CheckBox = new System.Windows.Forms.CheckBox();
+            this.pop3CheckBox = new System.Windows.Forms.CheckBox();
+            this.pop2CheckBox = new System.Windows.Forms.CheckBox();
+            this.pop1CheckBox = new System.Windows.Forms.CheckBox();
+            this.star4CheckBox = new System.Windows.Forms.CheckBox();
+            this.star3CheckBox = new System.Windows.Forms.CheckBox();
+            this.star2CheckBox = new System.Windows.Forms.CheckBox();
+            this.star1CheckBox = new System.Windows.Forms.CheckBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -237,6 +238,7 @@ namespace TechmaniaConverter
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.label2);
             this.tabPage2.Controls.Add(this.loadScrollSpeedFromTrack18CheckBox);
             this.tabPage2.Controls.Add(this.groupBox3);
             this.tabPage2.Location = new System.Drawing.Point(4, 29);
@@ -246,6 +248,16 @@ namespace TechmaniaConverter
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Scroll speed";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // loadScrollSpeedFromTrack18CheckBox
+            // 
+            this.loadScrollSpeedFromTrack18CheckBox.AutoSize = true;
+            this.loadScrollSpeedFromTrack18CheckBox.Location = new System.Drawing.Point(9, 323);
+            this.loadScrollSpeedFromTrack18CheckBox.Name = "loadScrollSpeedFromTrack18CheckBox";
+            this.loadScrollSpeedFromTrack18CheckBox.Size = new System.Drawing.Size(239, 24);
+            this.loadScrollSpeedFromTrack18CheckBox.TabIndex = 1;
+            this.loadScrollSpeedFromTrack18CheckBox.Text = "Load scroll speed from track 18";
+            this.loadScrollSpeedFromTrack18CheckBox.UseVisualStyleBackColor = true;
             // 
             // groupBox3
             // 
@@ -259,80 +271,10 @@ namespace TechmaniaConverter
             this.groupBox3.Controls.Add(this.star1CheckBox);
             this.groupBox3.Location = new System.Drawing.Point(3, 23);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(301, 178);
+            this.groupBox3.Size = new System.Drawing.Size(249, 170);
             this.groupBox3.TabIndex = 0;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Scroll speed defaults to 1:";
-            // 
-            // star1CheckBox
-            // 
-            this.star1CheckBox.AutoSize = true;
-            this.star1CheckBox.Location = new System.Drawing.Point(6, 37);
-            this.star1CheckBox.Name = "star1CheckBox";
-            this.star1CheckBox.Size = new System.Drawing.Size(69, 24);
-            this.star1CheckBox.TabIndex = 0;
-            this.star1CheckBox.Text = "Star 1";
-            this.star1CheckBox.UseVisualStyleBackColor = true;
-            // 
-            // star2CheckBox
-            // 
-            this.star2CheckBox.AutoSize = true;
-            this.star2CheckBox.Location = new System.Drawing.Point(6, 67);
-            this.star2CheckBox.Name = "star2CheckBox";
-            this.star2CheckBox.Size = new System.Drawing.Size(69, 24);
-            this.star2CheckBox.TabIndex = 1;
-            this.star2CheckBox.Text = "Star 2";
-            this.star2CheckBox.UseVisualStyleBackColor = true;
-            // 
-            // star3CheckBox
-            // 
-            this.star3CheckBox.AutoSize = true;
-            this.star3CheckBox.Location = new System.Drawing.Point(6, 97);
-            this.star3CheckBox.Name = "star3CheckBox";
-            this.star3CheckBox.Size = new System.Drawing.Size(69, 24);
-            this.star3CheckBox.TabIndex = 2;
-            this.star3CheckBox.Text = "Star 3";
-            this.star3CheckBox.UseVisualStyleBackColor = true;
-            // 
-            // star4CheckBox
-            // 
-            this.star4CheckBox.AutoSize = true;
-            this.star4CheckBox.Location = new System.Drawing.Point(6, 127);
-            this.star4CheckBox.Name = "star4CheckBox";
-            this.star4CheckBox.Size = new System.Drawing.Size(69, 24);
-            this.star4CheckBox.TabIndex = 3;
-            this.star4CheckBox.Text = "Star 4";
-            this.star4CheckBox.UseVisualStyleBackColor = true;
-            // 
-            // pop1CheckBox
-            // 
-            this.pop1CheckBox.AutoSize = true;
-            this.pop1CheckBox.Location = new System.Drawing.Point(125, 37);
-            this.pop1CheckBox.Name = "pop1CheckBox";
-            this.pop1CheckBox.Size = new System.Drawing.Size(68, 24);
-            this.pop1CheckBox.TabIndex = 4;
-            this.pop1CheckBox.Text = "Pop 1";
-            this.pop1CheckBox.UseVisualStyleBackColor = true;
-            // 
-            // pop2CheckBox
-            // 
-            this.pop2CheckBox.AutoSize = true;
-            this.pop2CheckBox.Location = new System.Drawing.Point(125, 67);
-            this.pop2CheckBox.Name = "pop2CheckBox";
-            this.pop2CheckBox.Size = new System.Drawing.Size(68, 24);
-            this.pop2CheckBox.TabIndex = 5;
-            this.pop2CheckBox.Text = "Pop 2";
-            this.pop2CheckBox.UseVisualStyleBackColor = true;
-            // 
-            // pop3CheckBox
-            // 
-            this.pop3CheckBox.AutoSize = true;
-            this.pop3CheckBox.Location = new System.Drawing.Point(125, 97);
-            this.pop3CheckBox.Name = "pop3CheckBox";
-            this.pop3CheckBox.Size = new System.Drawing.Size(68, 24);
-            this.pop3CheckBox.TabIndex = 6;
-            this.pop3CheckBox.Text = "Pop 3";
-            this.pop3CheckBox.UseVisualStyleBackColor = true;
             // 
             // pop4CheckBox
             // 
@@ -344,15 +286,85 @@ namespace TechmaniaConverter
             this.pop4CheckBox.Text = "Pop 4";
             this.pop4CheckBox.UseVisualStyleBackColor = true;
             // 
-            // loadScrollSpeedFromTrack18CheckBox
+            // pop3CheckBox
             // 
-            this.loadScrollSpeedFromTrack18CheckBox.AutoSize = true;
-            this.loadScrollSpeedFromTrack18CheckBox.Location = new System.Drawing.Point(9, 258);
-            this.loadScrollSpeedFromTrack18CheckBox.Name = "loadScrollSpeedFromTrack18CheckBox";
-            this.loadScrollSpeedFromTrack18CheckBox.Size = new System.Drawing.Size(239, 24);
-            this.loadScrollSpeedFromTrack18CheckBox.TabIndex = 1;
-            this.loadScrollSpeedFromTrack18CheckBox.Text = "Load scroll speed from track 18";
-            this.loadScrollSpeedFromTrack18CheckBox.UseVisualStyleBackColor = true;
+            this.pop3CheckBox.AutoSize = true;
+            this.pop3CheckBox.Location = new System.Drawing.Point(125, 97);
+            this.pop3CheckBox.Name = "pop3CheckBox";
+            this.pop3CheckBox.Size = new System.Drawing.Size(68, 24);
+            this.pop3CheckBox.TabIndex = 6;
+            this.pop3CheckBox.Text = "Pop 3";
+            this.pop3CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // pop2CheckBox
+            // 
+            this.pop2CheckBox.AutoSize = true;
+            this.pop2CheckBox.Location = new System.Drawing.Point(125, 67);
+            this.pop2CheckBox.Name = "pop2CheckBox";
+            this.pop2CheckBox.Size = new System.Drawing.Size(68, 24);
+            this.pop2CheckBox.TabIndex = 5;
+            this.pop2CheckBox.Text = "Pop 2";
+            this.pop2CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // pop1CheckBox
+            // 
+            this.pop1CheckBox.AutoSize = true;
+            this.pop1CheckBox.Location = new System.Drawing.Point(125, 37);
+            this.pop1CheckBox.Name = "pop1CheckBox";
+            this.pop1CheckBox.Size = new System.Drawing.Size(68, 24);
+            this.pop1CheckBox.TabIndex = 4;
+            this.pop1CheckBox.Text = "Pop 1";
+            this.pop1CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // star4CheckBox
+            // 
+            this.star4CheckBox.AutoSize = true;
+            this.star4CheckBox.Location = new System.Drawing.Point(6, 127);
+            this.star4CheckBox.Name = "star4CheckBox";
+            this.star4CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star4CheckBox.TabIndex = 3;
+            this.star4CheckBox.Text = "Star 4";
+            this.star4CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // star3CheckBox
+            // 
+            this.star3CheckBox.AutoSize = true;
+            this.star3CheckBox.Location = new System.Drawing.Point(6, 97);
+            this.star3CheckBox.Name = "star3CheckBox";
+            this.star3CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star3CheckBox.TabIndex = 2;
+            this.star3CheckBox.Text = "Star 3";
+            this.star3CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // star2CheckBox
+            // 
+            this.star2CheckBox.AutoSize = true;
+            this.star2CheckBox.Location = new System.Drawing.Point(6, 67);
+            this.star2CheckBox.Name = "star2CheckBox";
+            this.star2CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star2CheckBox.TabIndex = 1;
+            this.star2CheckBox.Text = "Star 2";
+            this.star2CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // star1CheckBox
+            // 
+            this.star1CheckBox.AutoSize = true;
+            this.star1CheckBox.Location = new System.Drawing.Point(6, 37);
+            this.star1CheckBox.Name = "star1CheckBox";
+            this.star1CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star1CheckBox.TabIndex = 0;
+            this.star1CheckBox.Text = "Star 1";
+            this.star1CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(9, 200);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(303, 60);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "If scroll speed is not found by other means,\r\nthe ticked patterns will default to" +
+    " 1, unticked\r\npatterns will default to 2.";
             // 
             // PtOptionsForm
             // 
@@ -412,5 +424,6 @@ namespace TechmaniaConverter
         private System.Windows.Forms.CheckBox star3CheckBox;
         private System.Windows.Forms.CheckBox star2CheckBox;
         private System.Windows.Forms.CheckBox star1CheckBox;
+        private System.Windows.Forms.Label label2;
     }
 }
