@@ -533,15 +533,15 @@ namespace TechmaniaConverter
 
         #region Volume and pan
         // Transforms [0, 1] to [0, 1] based on the given curve type and parameter. Output is clamped.
-        private static float ApplyCurve(float input, CurveType type, float param)
+        private static float ApplyCurve(float input, VolumnPanCurveType type, float param)
         {
             float output = input;
             switch (type)
             {
-                case CurveType.Exponential:
+                case VolumnPanCurveType.Exponential:
                     output = MathF.Pow(input, param);
                     break;
-                case CurveType.Logarithmic:
+                case VolumnPanCurveType.Logarithmic:
                     output = MathF.Log(input, param) + 1f;
                     break;
             }

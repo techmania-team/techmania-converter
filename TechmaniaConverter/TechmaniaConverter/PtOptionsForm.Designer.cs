@@ -43,8 +43,25 @@ namespace TechmaniaConverter
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.star1CheckBox = new System.Windows.Forms.CheckBox();
+            this.star2CheckBox = new System.Windows.Forms.CheckBox();
+            this.star3CheckBox = new System.Windows.Forms.CheckBox();
+            this.star4CheckBox = new System.Windows.Forms.CheckBox();
+            this.pop1CheckBox = new System.Windows.Forms.CheckBox();
+            this.pop2CheckBox = new System.Windows.Forms.CheckBox();
+            this.pop3CheckBox = new System.Windows.Forms.CheckBox();
+            this.pop4CheckBox = new System.Windows.Forms.CheckBox();
+            this.loadScrollSpeedFromTrack18CheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tabPage1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // wikiLinkLabel
@@ -143,7 +160,7 @@ namespace TechmaniaConverter
             // ignoreVolumeCheckBox
             // 
             this.ignoreVolumeCheckBox.AutoSize = true;
-            this.ignoreVolumeCheckBox.Location = new System.Drawing.Point(12, 398);
+            this.ignoreVolumeCheckBox.Location = new System.Drawing.Point(3, 338);
             this.ignoreVolumeCheckBox.Name = "ignoreVolumeCheckBox";
             this.ignoreVolumeCheckBox.Size = new System.Drawing.Size(167, 24);
             this.ignoreVolumeCheckBox.TabIndex = 12;
@@ -152,7 +169,7 @@ namespace TechmaniaConverter
             // 
             // okButton
             // 
-            this.okButton.Location = new System.Drawing.Point(121, 448);
+            this.okButton.Location = new System.Drawing.Point(123, 477);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(94, 29);
             this.okButton.TabIndex = 13;
@@ -166,7 +183,7 @@ namespace TechmaniaConverter
             this.groupBox1.Controls.Add(this.volumeLogarithmicRadioButton);
             this.groupBox1.Controls.Add(this.volumeParameterNameLabel);
             this.groupBox1.Controls.Add(this.volumeParameterTextBox);
-            this.groupBox1.Location = new System.Drawing.Point(12, 59);
+            this.groupBox1.Location = new System.Drawing.Point(3, 21);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(300, 136);
             this.groupBox1.TabIndex = 14;
@@ -179,7 +196,7 @@ namespace TechmaniaConverter
             this.groupBox2.Controls.Add(this.panLogarithmicRadioButton);
             this.groupBox2.Controls.Add(this.panParameterNameLabel);
             this.groupBox2.Controls.Add(this.panParameterTextBox);
-            this.groupBox2.Location = new System.Drawing.Point(12, 226);
+            this.groupBox2.Location = new System.Drawing.Point(3, 178);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(300, 143);
             this.groupBox2.TabIndex = 15;
@@ -189,22 +206,162 @@ namespace TechmaniaConverter
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 488);
+            this.label1.Location = new System.Drawing.Point(16, 519);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(252, 40);
             this.label1.TabIndex = 16;
             this.label1.Text = "New options will apply the next time\r\nyou load .pt files.";
             // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.tabPage1);
+            this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Location = new System.Drawing.Point(12, 37);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(324, 420);
+            this.tabControl1.TabIndex = 17;
+            // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.groupBox1);
+            this.tabPage1.Controls.Add(this.groupBox2);
+            this.tabPage1.Controls.Add(this.ignoreVolumeCheckBox);
+            this.tabPage1.Location = new System.Drawing.Point(4, 29);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(316, 387);
+            this.tabPage1.TabIndex = 0;
+            this.tabPage1.Text = "Volume & pan";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.loadScrollSpeedFromTrack18CheckBox);
+            this.tabPage2.Controls.Add(this.groupBox3);
+            this.tabPage2.Location = new System.Drawing.Point(4, 29);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(316, 387);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Scroll speed";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.pop4CheckBox);
+            this.groupBox3.Controls.Add(this.pop3CheckBox);
+            this.groupBox3.Controls.Add(this.pop2CheckBox);
+            this.groupBox3.Controls.Add(this.pop1CheckBox);
+            this.groupBox3.Controls.Add(this.star4CheckBox);
+            this.groupBox3.Controls.Add(this.star3CheckBox);
+            this.groupBox3.Controls.Add(this.star2CheckBox);
+            this.groupBox3.Controls.Add(this.star1CheckBox);
+            this.groupBox3.Location = new System.Drawing.Point(3, 23);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(301, 178);
+            this.groupBox3.TabIndex = 0;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Scroll speed defaults to 1:";
+            // 
+            // star1CheckBox
+            // 
+            this.star1CheckBox.AutoSize = true;
+            this.star1CheckBox.Location = new System.Drawing.Point(6, 37);
+            this.star1CheckBox.Name = "star1CheckBox";
+            this.star1CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star1CheckBox.TabIndex = 0;
+            this.star1CheckBox.Text = "Star 1";
+            this.star1CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // star2CheckBox
+            // 
+            this.star2CheckBox.AutoSize = true;
+            this.star2CheckBox.Location = new System.Drawing.Point(6, 67);
+            this.star2CheckBox.Name = "star2CheckBox";
+            this.star2CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star2CheckBox.TabIndex = 1;
+            this.star2CheckBox.Text = "Star 2";
+            this.star2CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // star3CheckBox
+            // 
+            this.star3CheckBox.AutoSize = true;
+            this.star3CheckBox.Location = new System.Drawing.Point(6, 97);
+            this.star3CheckBox.Name = "star3CheckBox";
+            this.star3CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star3CheckBox.TabIndex = 2;
+            this.star3CheckBox.Text = "Star 3";
+            this.star3CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // star4CheckBox
+            // 
+            this.star4CheckBox.AutoSize = true;
+            this.star4CheckBox.Location = new System.Drawing.Point(6, 127);
+            this.star4CheckBox.Name = "star4CheckBox";
+            this.star4CheckBox.Size = new System.Drawing.Size(69, 24);
+            this.star4CheckBox.TabIndex = 3;
+            this.star4CheckBox.Text = "Star 4";
+            this.star4CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // pop1CheckBox
+            // 
+            this.pop1CheckBox.AutoSize = true;
+            this.pop1CheckBox.Location = new System.Drawing.Point(125, 37);
+            this.pop1CheckBox.Name = "pop1CheckBox";
+            this.pop1CheckBox.Size = new System.Drawing.Size(68, 24);
+            this.pop1CheckBox.TabIndex = 4;
+            this.pop1CheckBox.Text = "Pop 1";
+            this.pop1CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // pop2CheckBox
+            // 
+            this.pop2CheckBox.AutoSize = true;
+            this.pop2CheckBox.Location = new System.Drawing.Point(125, 67);
+            this.pop2CheckBox.Name = "pop2CheckBox";
+            this.pop2CheckBox.Size = new System.Drawing.Size(68, 24);
+            this.pop2CheckBox.TabIndex = 5;
+            this.pop2CheckBox.Text = "Pop 2";
+            this.pop2CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // pop3CheckBox
+            // 
+            this.pop3CheckBox.AutoSize = true;
+            this.pop3CheckBox.Location = new System.Drawing.Point(125, 97);
+            this.pop3CheckBox.Name = "pop3CheckBox";
+            this.pop3CheckBox.Size = new System.Drawing.Size(68, 24);
+            this.pop3CheckBox.TabIndex = 6;
+            this.pop3CheckBox.Text = "Pop 3";
+            this.pop3CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // pop4CheckBox
+            // 
+            this.pop4CheckBox.AutoSize = true;
+            this.pop4CheckBox.Location = new System.Drawing.Point(125, 127);
+            this.pop4CheckBox.Name = "pop4CheckBox";
+            this.pop4CheckBox.Size = new System.Drawing.Size(68, 24);
+            this.pop4CheckBox.TabIndex = 7;
+            this.pop4CheckBox.Text = "Pop 4";
+            this.pop4CheckBox.UseVisualStyleBackColor = true;
+            // 
+            // loadScrollSpeedFromTrack18CheckBox
+            // 
+            this.loadScrollSpeedFromTrack18CheckBox.AutoSize = true;
+            this.loadScrollSpeedFromTrack18CheckBox.Location = new System.Drawing.Point(9, 258);
+            this.loadScrollSpeedFromTrack18CheckBox.Name = "loadScrollSpeedFromTrack18CheckBox";
+            this.loadScrollSpeedFromTrack18CheckBox.Size = new System.Drawing.Size(239, 24);
+            this.loadScrollSpeedFromTrack18CheckBox.TabIndex = 1;
+            this.loadScrollSpeedFromTrack18CheckBox.Text = "Load scroll speed from track 18";
+            this.loadScrollSpeedFromTrack18CheckBox.UseVisualStyleBackColor = true;
+            // 
             // PtOptionsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(329, 538);
+            this.ClientSize = new System.Drawing.Size(349, 574);
+            this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.okButton);
-            this.Controls.Add(this.ignoreVolumeCheckBox);
             this.Controls.Add(this.wikiLinkLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -214,6 +371,13 @@ namespace TechmaniaConverter
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            this.tabControl1.ResumeLayout(false);
+            this.tabPage1.ResumeLayout(false);
+            this.tabPage1.PerformLayout();
+            this.tabPage2.ResumeLayout(false);
+            this.tabPage2.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -235,5 +399,18 @@ namespace TechmaniaConverter
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.CheckBox loadScrollSpeedFromTrack18CheckBox;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.CheckBox pop4CheckBox;
+        private System.Windows.Forms.CheckBox pop3CheckBox;
+        private System.Windows.Forms.CheckBox pop2CheckBox;
+        private System.Windows.Forms.CheckBox pop1CheckBox;
+        private System.Windows.Forms.CheckBox star4CheckBox;
+        private System.Windows.Forms.CheckBox star3CheckBox;
+        private System.Windows.Forms.CheckBox star2CheckBox;
+        private System.Windows.Forms.CheckBox star1CheckBox;
     }
 }

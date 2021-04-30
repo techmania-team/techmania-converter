@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TechmaniaConverter
 {
-    public enum CurveType
+    public enum VolumnPanCurveType
     {
         Exponential,
         Logarithmic
@@ -16,19 +16,31 @@ namespace TechmaniaConverter
     {
         public static PtOptions instance;
 
-        public CurveType volumeCurve;
+        // Volume and pan
+
+        public VolumnPanCurveType volumeCurve;
         public float volumeParam;  // Exponent for exponential curve, base for logarithmic curve
-        public CurveType panCurve;
+        public VolumnPanCurveType panCurve;
         public float panParam;
         public bool ignoreVolumeNotes;
 
+        // Scroll speed
+
+        public List<bool> scrollSpeedDefaultsToOneOnStar;
+        public List<bool> scrollSpeedDefaultsToOneOnPop;
+        public bool loadScrollSpeedFromTrack18;
+
         public PtOptions()
         {
-            volumeCurve = CurveType.Exponential;
+            volumeCurve = VolumnPanCurveType.Exponential;
             volumeParam = 1.5f;
-            panCurve = CurveType.Exponential;
+            panCurve = VolumnPanCurveType.Exponential;
             panParam = 0.25f;
             ignoreVolumeNotes = false;
+
+            scrollSpeedDefaultsToOneOnStar = new List<bool>() { false, false, false, false };
+            scrollSpeedDefaultsToOneOnPop = new List<bool>() { false, false, false, false };
+            loadScrollSpeedFromTrack18 = false;
         }
     }
 }
