@@ -18,6 +18,13 @@ namespace TechmaniaConverter
         {
             InitializeComponent();
             PtOptionsForm.LoadOrCreateOptions();
+            RefreshLoadButtons();
+        }
+
+        private void RefreshLoadButtons()
+        {
+            loadBmsButton.Enabled = tracksFolder != null;
+            loadPtButton.Enabled = tracksFolder != null;
         }
 
         #region Bms input
@@ -221,6 +228,7 @@ namespace TechmaniaConverter
                 trackFolderTextBox.Text = dialog.SelectedPath;
                 tracksFolder = trackFolderTextBox.Text;
             }
+            RefreshLoadButtons();
         }
 
         private void FindTechFolder(TrackMetadata trackMetadata)
