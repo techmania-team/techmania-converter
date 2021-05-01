@@ -46,6 +46,7 @@ namespace TechmaniaConverter
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
             this.loadScrollSpeedFromTrack18CheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.pop4CheckBox = new System.Windows.Forms.CheckBox();
@@ -56,7 +57,6 @@ namespace TechmaniaConverter
             this.star3CheckBox = new System.Windows.Forms.CheckBox();
             this.star2CheckBox = new System.Windows.Forms.CheckBox();
             this.star1CheckBox = new System.Windows.Forms.CheckBox();
-            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -249,6 +249,16 @@ namespace TechmaniaConverter
             this.tabPage2.Text = "Scroll speed";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(9, 200);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(294, 60);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "If scroll speed is not found by other means,\r\nthe ticked patterns will default to" +
+    " 1 (8 BPS),\r\nunticked patterns will default to 2 (4 BPS).";
+            // 
             // loadScrollSpeedFromTrack18CheckBox
             // 
             this.loadScrollSpeedFromTrack18CheckBox.AutoSize = true;
@@ -355,16 +365,6 @@ namespace TechmaniaConverter
             this.star1CheckBox.TabIndex = 0;
             this.star1CheckBox.Text = "Star 1";
             this.star1CheckBox.UseVisualStyleBackColor = true;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(9, 200);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(303, 60);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "If scroll speed is not found by other means,\r\nthe ticked patterns will default to" +
-    " 1, unticked\r\npatterns will default to 2.";
             // 
             // PtOptionsForm
             // 

@@ -29,6 +29,9 @@ namespace TechmaniaConverter
         private List<Tuple<string, EventData>> eventsWithUnknownAttribute;  // Item 1 is filename
         private List<Tuple<string, EventData>> unknownSpecialEvents;  // Item 1 is filename
 
+        // Scroll speed tracking.
+        private HashSet<Pattern> patternsWithScrollSpeedSet;
+
         #region Metadata
         public void ExtractShortNameAndInitialize(string filename)
         {
@@ -44,6 +47,7 @@ namespace TechmaniaConverter
             playerTwoWarning = false;
             eventsWithUnknownAttribute = new List<Tuple<string, EventData>>();
             unknownSpecialEvents = new List<Tuple<string, EventData>>();
+            patternsWithScrollSpeedSet = new HashSet<Pattern>();
 
             reportWriter = new StringWriter();
         }
@@ -76,10 +80,28 @@ namespace TechmaniaConverter
         {
             Pattern p = track.patterns.Find(p => p.patternMetadata.patternName == patternName);
             if (p == null) return;
-            if (sp == "2") return;
+            if (patternsWithScrollSpeedSet.Contains(p)) return;
 
-            // When scroll speed is 1, bps is 8, and we need to adjust drag anchors.
-            p.patternMetadata.bps = 8;
+            p.patternMetadata.bps = ScrollSpeedToBps(int.Parse(sp));
+            reportWriter.WriteLine($"Setting BPS of {p.patternMetadata.patternName} to {p.patternMetadata.bps}.");
+            patternsWithScrollSpeedSet.Add(p);
+        }
+
+        private void SetPatternDefaultScrollSpeed(string patternName, bool defaultIs1)
+        {
+            Pattern p = track.patterns.Find(p => p.patternMetadata.patternName == patternName);
+            if (p == null) return;
+            if (patternsWithScrollSpeedSet.Contains(p)) return;
+
+            int scrollSpeed = defaultIs1 ? 1 : 2;
+            p.patternMetadata.bps = ScrollSpeedToBps(scrollSpeed);
+            reportWriter.WriteLine($"Setting BPS of {p.patternMetadata.patternName} to the default value of {p.patternMetadata.bps}.");
+            patternsWithScrollSpeedSet.Add(p);
+        }
+
+        private void AdjustDragNoteAnchorsForScrollSpeed(Pattern p)
+        {
+            if (p.patternMetadata.bps == 4) return;
             foreach (Note n in p.notes)
             {
                 if (n.type != NoteType.Drag) continue;
@@ -136,12 +158,16 @@ namespace TechmaniaConverter
                 string[] line = FindLineInCsv(starStagePath, ',', shortName);
                 if (line == null) continue;
 
-                reportWriter.WriteLine("Found scroll speed for Star patterns.");
+                reportWriter.WriteLine($"Found scroll speed for Star patterns in {starStageFilename}.");
                 SetPatternScrollSpeed("Star NM", line[2]);
                 SetPatternScrollSpeed("Star HD", line[5]);
                 SetPatternScrollSpeed("Star MX", line[8]);
                 SetPatternScrollSpeed("Star EX", line[11]);
             }
+            SetPatternDefaultScrollSpeed("Star NM", PtOptions.instance.scrollSpeedDefaultsToOneOnStar[0]);
+            SetPatternDefaultScrollSpeed("Star HD", PtOptions.instance.scrollSpeedDefaultsToOneOnStar[1]);
+            SetPatternDefaultScrollSpeed("Star MX", PtOptions.instance.scrollSpeedDefaultsToOneOnStar[2]);
+            SetPatternDefaultScrollSpeed("Star EX", PtOptions.instance.scrollSpeedDefaultsToOneOnStar[3]);
             foreach (string popStageFilename in popStageFiles)
             {
                 string popStagePath = discInfoFolder.OpenFile(popStageFilename);
@@ -149,12 +175,17 @@ namespace TechmaniaConverter
                 string[] line = FindLineInCsv(popStagePath, ',', shortName);
                 if (line == null) continue;
 
-                reportWriter.WriteLine("Found scroll speed for Pop patterns.");
+                reportWriter.WriteLine($"Found scroll speed for Pop patterns in {popStageFilename}.");
                 SetPatternScrollSpeed("Pop NM", line[2]);
                 SetPatternScrollSpeed("Pop HD", line[5]);
                 SetPatternScrollSpeed("Pop MX", line[8]);
                 SetPatternScrollSpeed("Pop EX", line[11]);
             }
+            SetPatternDefaultScrollSpeed("Pop NM", PtOptions.instance.scrollSpeedDefaultsToOneOnPop[0]);
+            SetPatternDefaultScrollSpeed("Pop HD", PtOptions.instance.scrollSpeedDefaultsToOneOnPop[1]);
+            SetPatternDefaultScrollSpeed("Pop MX", PtOptions.instance.scrollSpeedDefaultsToOneOnPop[2]);
+            SetPatternDefaultScrollSpeed("Pop EX", PtOptions.instance.scrollSpeedDefaultsToOneOnPop[3]);
+            track.patterns.ForEach(p => AdjustDragNoteAnchorsForScrollSpeed(p));
 
             // Search for disc image.
             List<string> candidates = new List<string>();
@@ -265,6 +296,7 @@ namespace TechmaniaConverter
         #endregion
 
         #region Conversion
+        // filename should be all lower case.
         public void ConvertAndAddPattern(string filename, PlayerData parsedPt)
         {
             Match match = Regex.Match(filename, @"(.*)_(star|pop)_([1-4])\.pt");
@@ -320,6 +352,16 @@ namespace TechmaniaConverter
             {
                 foreach (EventData e in t.Events)
                 {
+                    if (e.TrackId == 18 && e.Tick == 0 && e.EventType == EventType.Note && PtOptions.instance.loadScrollSpeedFromTrack18)
+                    {
+                        pattern.patternMetadata.bps = ScrollSpeedToBps(e.Attribute);
+                        reportWriter.WriteLine($"Loaded scroll speed for {filename} from track 18; BPS set to {pattern.patternMetadata.bps}.");
+                        patternsWithScrollSpeedSet.Add(pattern);
+
+                        // Do not parse this event as a note.
+                        continue;
+                    }
+
                     // Conveniently, events in a track are sorted by tick.
                     switch (e.EventType)
                     {
@@ -590,6 +632,11 @@ namespace TechmaniaConverter
                 throw new Exception("Too many tracks in .pt, unable to convert. Please choose a .pt with fewer tracks.");
             }
             return lane;
+        }
+
+        private static int ScrollSpeedToBps(int scrollSpeed)
+        {
+            return 8 / scrollSpeed;
         }
 
         private Note EventDataToNote(string filename, EventData e, Func<int, int> TickToPulse,
