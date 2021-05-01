@@ -26,11 +26,11 @@ namespace TechmaniaConverter
         // Error reporting.
         private bool typeZeroWarning;
         private bool playerTwoWarning;
-        private HashSet<int> unknownAttributes;
+        private List<Tuple<string, EventData>> eventsWithUnknownAttribute;  // Item 1 is filename
         private List<Tuple<string, EventData>> unknownSpecialEvents;  // Item 1 is filename
 
         #region Metadata
-        public void ExtractShortNameFrom(string filename)
+        public void ExtractShortNameAndInitialize(string filename)
         {
             Match match = Regex.Match(filename, @"(.*)_(star|pop)_[1-4]\.pt");
             if (!match.Success)
@@ -42,7 +42,7 @@ namespace TechmaniaConverter
             allInstruments = new HashSet<string>();
             typeZeroWarning = false;
             playerTwoWarning = false;
-            unknownAttributes = new HashSet<int>();
+            eventsWithUnknownAttribute = new List<Tuple<string, EventData>>();
             unknownSpecialEvents = new List<Tuple<string, EventData>>();
 
             reportWriter = new StringWriter();
@@ -343,7 +343,7 @@ namespace TechmaniaConverter
                                 bgaStartPulse = TickToPulse(e.Tick);
                                 break;
                             }
-                            Note note = EventDataToNote(e, TickToPulse, trackVolume);
+                            Note note = EventDataToNote(filename, e, TickToPulse, trackVolume);
                             if (note != null)
                             {
                                 pattern.notes.Add(note);
@@ -592,7 +592,7 @@ namespace TechmaniaConverter
             return lane;
         }
 
-        private Note EventDataToNote(EventData e, Func<int, int> TickToPulse,
+        private Note EventDataToNote(string filename, EventData e, Func<int, int> TickToPulse,
             Dictionary<uint, float> trackVolume)
         {
             int pulse = TickToPulse(e.Tick);
@@ -727,7 +727,7 @@ namespace TechmaniaConverter
                         endOfScan = false
                     };
                 default:
-                    unknownAttributes.Add(e.Attribute);
+                    eventsWithUnknownAttribute.Add(new Tuple<string, EventData>(filename, e));
                     return null;
             }
         }
@@ -747,12 +747,12 @@ namespace TechmaniaConverter
                 reportWriter.WriteLine("Events on tracks 8-15 (P2 visible and P2 special) are not supported, and will be ignored.");
                 reportWriter.WriteLine();
             }
-            if (unknownAttributes.Count > 0)
+            if (eventsWithUnknownAttribute.Count > 0)
             {
-                reportWriter.WriteLine("The following event attributes are not recognized, and events with these attributes will be ignored:");
-                foreach (int c in unknownAttributes)
+                reportWriter.WriteLine("The following notes contain unknown attributes and will be ignored:");
+                foreach (Tuple<string, EventData> tuple in eventsWithUnknownAttribute)
                 {
-                    reportWriter.Write(c + ", ");
+                    reportWriter.WriteLine($"{tuple.Item1}, track {tuple.Item2.TrackId}, tick {tuple.Item2.Tick}, attribute {tuple.Item2.Attribute}");
                 }
                 reportWriter.WriteLine();
                 reportWriter.WriteLine();
@@ -762,7 +762,7 @@ namespace TechmaniaConverter
                 reportWriter.WriteLine("The following special notes modify neither an end-of-scan note or a drag note. These special notes have no meaning, and will be ignored:");
                 foreach (Tuple<string, EventData> tuple in unknownSpecialEvents)
                 {
-                    reportWriter.WriteLine($"{tuple.Item1}, tick {tuple.Item2.Tick}, track {tuple.Item2.TrackId}");
+                    reportWriter.WriteLine($"{tuple.Item1}, track {tuple.Item2.TrackId}, tick {tuple.Item2.Tick}");
                 }
                 reportWriter.WriteLine();
             }

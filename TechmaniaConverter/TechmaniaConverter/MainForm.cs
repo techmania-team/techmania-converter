@@ -143,7 +143,7 @@ namespace TechmaniaConverter
             try
             {
                 // Extract the song's short name. This is the only guaranteed piece of metadata we can get.
-                converter.ExtractShortNameFrom(Path.GetFileName(fullPaths[0]));
+                converter.ExtractShortNameAndInitialize(Path.GetFileName(fullPaths[0]));
 
                 // Load and parse the pt files.
                 foreach (string fullPath in fullPaths)
