@@ -53,15 +53,17 @@ namespace TechmaniaConverter
         }
 
         // Assumes that the csv file exists.
-        private string[] FindLineInCsv(string csvPath, char delimiter, string shortName)
+        private List<string> FindLineInCsv(string csvPath, string shortName)
         {
-            string[] lines = File.ReadAllLines(csvPath);
-            foreach (string line in lines)
+            string text = File.ReadAllText(csvPath).Replace('\t', ',');  // Some flavors of discstock.csv uses tabs as separators.
+            NReco.Csv.CsvReader csvReader = new NReco.Csv.CsvReader(new StringReader(text));
+            while (csvReader.Read())
             {
-                string[] splits = line.Split(delimiter);
-                if (splits[1] == shortName)
+                if (csvReader[1] == shortName)
                 {
-                    return splits;
+                    List<string> line = new List<string>();
+                    for (int i = 0; i < csvReader.FieldsCount; i++) line.Add(csvReader[i]);
+                    return line;
                 }
             }
             return null;
@@ -142,7 +144,7 @@ namespace TechmaniaConverter
             if (File.Exists(discstockPath))
             {
                 reportWriter.WriteLine("Found discstock.csv.");
-                string[] line = FindLineInCsv(discstockPath, '\t', shortName);
+                List<string> line = FindLineInCsv(discstockPath, shortName);
                 if (line != null)
                 {
                     reportWriter.WriteLine("Found title, artist, genre and difficulty levels.");
@@ -171,7 +173,7 @@ namespace TechmaniaConverter
             {
                 string starStagePath = discInfoFolder.OpenFile(starStageFilename);
                 if (!File.Exists(starStagePath)) continue;
-                string[] line = FindLineInCsv(starStagePath, ',', shortName);
+                List<string> line = FindLineInCsv(starStagePath, shortName);
                 if (line == null) continue;
 
                 reportWriter.WriteLine($"Found scroll speed for Star patterns in {starStageFilename}.");
@@ -188,7 +190,7 @@ namespace TechmaniaConverter
             {
                 string popStagePath = discInfoFolder.OpenFile(popStageFilename);
                 if (!File.Exists(popStagePath)) continue;
-                string[] line = FindLineInCsv(popStagePath, ',', shortName);
+                List<string> line = FindLineInCsv(popStagePath, shortName);
                 if (line == null) continue;
 
                 reportWriter.WriteLine($"Found scroll speed for Pop patterns in {popStageFilename}.");
