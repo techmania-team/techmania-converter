@@ -51,7 +51,7 @@ namespace TechmaniaConverter
             }
             catch (Exception ex)
             {
-                reportTextBox.Text = "Could not load .bms:\r\n\r\n" + ex.Message;
+                reportTextBox.Text = "Could not load .bms:\r\n\r\n" + ex.ToString();
                 return;
             }
 
@@ -68,7 +68,7 @@ namespace TechmaniaConverter
             }
             catch (Exception ex)
             {
-                reportTextBox.Text = "An error occurred when parsing .bms file:\r\n\r\n" + ex.Message;
+                reportTextBox.Text = "An error occurred when parsing .bms file:\r\n\r\n" + ex.ToString();
                 return;
             }
 
@@ -129,7 +129,7 @@ namespace TechmaniaConverter
             }
             catch (Exception ex)
             {
-                reportTextBox.Text = "Could not open the specified folder:\r\n\r\n" + ex.Message;
+                reportTextBox.Text = "Could not open the specified folder:\r\n\r\n" + ex.ToString();
                 return;
             }
 
