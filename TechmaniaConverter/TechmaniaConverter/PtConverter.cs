@@ -67,24 +67,40 @@ namespace TechmaniaConverter
             return null;
         }
 
-        private void SetPatternLevel(string patternName, string level)
+        private void SetPatternLevel(string patternName, string levelString)
         {
             Pattern p = track.patterns.Find(p => p.patternMetadata.patternName == patternName);
             if (p != null)
             {
-                p.patternMetadata.level = int.Parse(level);
+                int level;
+                if (int.TryParse(levelString, out level))
+                {
+                    p.patternMetadata.level = level;
+                }
+                else
+                {
+                    reportWriter.WriteLine($"Warning: {patternName}'s level is missing or invalid in CSV; using default value of 1.");
+                }
             }
         }
 
-        private void SetPatternScrollSpeed(string patternName, string sp)
+        private void SetPatternScrollSpeed(string patternName, string spString)
         {
             Pattern p = track.patterns.Find(p => p.patternMetadata.patternName == patternName);
             if (p == null) return;
             if (patternsWithScrollSpeedSet.Contains(p)) return;
 
-            p.patternMetadata.bps = ScrollSpeedToBps(int.Parse(sp));
-            reportWriter.WriteLine($"Setting BPS of {p.patternMetadata.patternName} to {p.patternMetadata.bps}.");
-            patternsWithScrollSpeedSet.Add(p);
+            int sp;
+            if (int.TryParse(spString, out sp))
+            {
+                p.patternMetadata.bps = ScrollSpeedToBps(sp);
+                reportWriter.WriteLine($"Setting BPS of {patternName} to {p.patternMetadata.bps}.");
+                patternsWithScrollSpeedSet.Add(p);
+            }
+            else
+            {
+                reportWriter.WriteLine($"Warning: {patternName}'s scroll speed is missing or invalid in CSV; using default value.");
+            }
         }
 
         private void SetPatternDefaultScrollSpeed(string patternName, bool defaultIs1)
@@ -95,7 +111,7 @@ namespace TechmaniaConverter
 
             int scrollSpeed = defaultIs1 ? 1 : 2;
             p.patternMetadata.bps = ScrollSpeedToBps(scrollSpeed);
-            reportWriter.WriteLine($"Setting BPS of {p.patternMetadata.patternName} to the default value of {p.patternMetadata.bps}.");
+            reportWriter.WriteLine($"Setting BPS of {patternName} to the default value of {p.patternMetadata.bps}.");
             patternsWithScrollSpeedSet.Add(p);
         }
 

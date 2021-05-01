@@ -158,7 +158,7 @@ namespace TechmaniaConverter
             }
             catch (Exception ex)
             {
-                reportTextBox.Text = "An error occurred when parsing .pt file:\r\n\r\n" + ex.Message;
+                reportTextBox.Text = "An error occurred when parsing .pt file:\r\n\r\n" + ex.ToString();
                 return;
             }
 
