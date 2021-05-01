@@ -58,7 +58,6 @@ namespace TechmaniaConverter
             string[] lines = File.ReadAllLines(csvPath);
             foreach (string line in lines)
             {
-                if (line == "") continue;
                 string[] splits = line.Split(delimiter);
                 if (splits[1] == shortName)
                 {
