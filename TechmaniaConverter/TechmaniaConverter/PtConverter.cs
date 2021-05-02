@@ -41,7 +41,7 @@ namespace TechmaniaConverter
                 throw new Exception($"Unrecognized file name: {filename}. {unrecognizedFilenameMessage}");
             }
 
-            track = new Track(match.Groups[1].Value, "");
+            track = new Track(match.Groups[1].Value.ToLower(), "");
             allInstruments = new HashSet<string>();
             typeZeroWarning = false;
             playerTwoWarning = false;
@@ -59,7 +59,7 @@ namespace TechmaniaConverter
             NReco.Csv.CsvReader csvReader = new NReco.Csv.CsvReader(new StringReader(text));
             while (csvReader.Read())
             {
-                if (csvReader[1] == shortName)
+                if (csvReader[1].ToLower() == shortName)
                 {
                     List<string> line = new List<string>();
                     for (int i = 0; i < csvReader.FieldsCount; i++) line.Add(csvReader[i]);
