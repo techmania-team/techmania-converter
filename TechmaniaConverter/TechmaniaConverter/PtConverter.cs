@@ -413,6 +413,10 @@ namespace TechmaniaConverter
                             trackVolume[e.TrackId] = IntVolumeToFloat(e.Volume);
                             break;
                         case EventType.Tempo:
+                            if (e.Tick == 0 && MathF.Abs(e.Tempo - (float)pattern.patternMetadata.initBpm) < 0.001f)
+                            {
+                                break;
+                            }
                             pattern.bpmEvents.Add(new BpmEvent()
                             {
                                 pulse = TickToPulse(e.Tick),
@@ -580,14 +584,6 @@ namespace TechmaniaConverter
             if (bgaStartPulse >= 0)
             {
                 pattern.patternMetadata.bgaOffset = pattern.PulseToTime(bgaStartPulse);
-            }
-
-            // Remove excessive BPM events from the beginning. Sometimes there are like 20 of them.
-            // What the heck.
-            while (pattern.bpmEvents.Count > 0 &&
-                pattern.bpmEvents[0].bpm == pattern.patternMetadata.initBpm)
-            {
-                pattern.bpmEvents.RemoveAt(0);
             }
         }
 
