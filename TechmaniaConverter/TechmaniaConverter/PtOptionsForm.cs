@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ConverterBackend;
 
-namespace TechmaniaConverter
+namespace ConverterWinForm
 {
     public partial class PtOptionsForm : Form
     {

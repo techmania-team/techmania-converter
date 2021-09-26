@@ -1,5 +1,5 @@
 ﻿
-namespace TechmaniaConverter
+namespace ConverterWinForm
 {
     partial class PtOptionsForm
     {

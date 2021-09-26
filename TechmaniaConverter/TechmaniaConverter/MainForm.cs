@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ConverterBackend;
 
-namespace TechmaniaConverter
+namespace ConverterWinForm
 {
     public partial class MainForm : Form
     {
@@ -80,7 +80,7 @@ namespace TechmaniaConverter
                 return;
             }
 
-            FindTechFolder(converter.track.trackMetadata);
+            GetTechFolder(converter.track.trackMetadata);
             string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
                 + converter.GetReport();
             reportTextBox.Text = report;
@@ -171,7 +171,7 @@ namespace TechmaniaConverter
             }
 
             converter.GenerateReport();
-            FindTechFolder(converter.track.trackMetadata);
+            GetTechFolder(converter.track.trackMetadata);
             string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
                 + converter.GetReport();
             reportTextBox.Text = report;
@@ -232,16 +232,16 @@ namespace TechmaniaConverter
             RefreshLoadButtons();
         }
 
-        private void FindTechFolder(TrackMetadata trackMetadata)
+        private void GetTechFolder(TrackMetadata trackMetadata)
         {
-            string filteredTitle = FilterString(trackMetadata.title);
-            string filteredArtist = FilterString(trackMetadata.artist);
+            string filteredTitle = RemoveInvalidCharactersFromPath(trackMetadata.title);
+            string filteredArtist = RemoveInvalidCharactersFromPath(trackMetadata.artist);
             string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
             techFolder = Path.Combine(tracksFolder, $"{filteredArtist} - {filteredTitle} - {timestamp}");
         }
 
-        private static string FilterString(string input)
+        private static string RemoveInvalidCharactersFromPath(string input)
         {
             StringBuilder builder = new StringBuilder();
             const string invalidChars = "\\/*:?\"<>|";
