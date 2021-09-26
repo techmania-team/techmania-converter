@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TechmaniaConverter
+namespace ConverterBackend
 {
-    class PtLoader
+    public class PtLoader
     {
         public static PlayerData Load(string filename)
         {

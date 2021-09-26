@@ -25,4 +25,8 @@
     <Folder Include="Resources\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ConverterBackend\ConverterBackend.csproj" />
+  </ItemGroup>
+
 </Project>

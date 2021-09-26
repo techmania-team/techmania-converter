@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace TechmaniaConverter
+namespace ConverterBackend
 {
-    class BmsConverter : ConverterBase
+    public class BmsConverter : ConverterBase
     {
         private Pattern pattern;
         private string longNoteCloser;

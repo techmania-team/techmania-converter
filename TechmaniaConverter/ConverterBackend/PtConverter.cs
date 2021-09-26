@@ -6,11 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
-namespace TechmaniaConverter
+namespace ConverterBackend
 {
-    class PtConverter : ConverterBase
+    public class PtConverter : ConverterBase
     {
         public HashSet<string> allInstruments { get; private set; }
         // Disc image in the source becomes the eyecatch in the destination.

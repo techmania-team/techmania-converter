@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TechmaniaConverter
+namespace ConverterBackend
 {
     // A custom class to allow traversing folders using intuitive method calls.
     class Folder
