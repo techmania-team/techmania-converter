@@ -365,7 +365,7 @@ namespace TechmaniaConverter
             // - tracks 4-7 will be processed later;
             // - tracks 8-15 are ignored.
             List<EventData> specialEvents = new List<EventData>();
-            Dictionary<uint, float> trackVolume = new Dictionary<uint, float>();
+            Dictionary<uint, int> trackVolumePercent = new Dictionary<uint, int>();
             foreach (TrackData t in parsedPt.Tracks)
             {
                 foreach (EventData e in t.Events)
@@ -403,14 +403,14 @@ namespace TechmaniaConverter
                                 bgaStartPulse = TickToPulse(e.Tick);
                                 break;
                             }
-                            Note note = EventDataToNote(filename, e, TickToPulse, trackVolume);
+                            Note note = EventDataToNote(filename, e, TickToPulse, trackVolumePercent);
                             if (note != null)
                             {
                                 pattern.notes.Add(note);
                             }
                             break;
                         case EventType.Volume:
-                            trackVolume[e.TrackId] = IntVolumeToFloat(e.Volume);
+                            trackVolumePercent[e.TrackId] = IntVolumeToPercent(e.Volume);
                             break;
                         case EventType.Tempo:
                             if (e.Tick == 0 && MathF.Abs(e.Tempo - (float)pattern.patternMetadata.initBpm) < 0.001f)
@@ -610,16 +610,17 @@ namespace TechmaniaConverter
             return output;
         }
 
-        private static float IntVolumeToFloat(int v)
+        private static int IntVolumeToPercent(int v)
         {
             float normalized = v / 127f;
-            return ApplyCurve(normalized, PtOptions.instance.volumeCurve, PtOptions.instance.volumeParam);
+            float curved = ApplyCurve(normalized, PtOptions.instance.volumeCurve, PtOptions.instance.volumeParam);
+            return (int)MathF.Floor(curved * 100f);
         }
 
-        private static float IntPanToFloat(int p)
+        private static int IntPanToPercent(int p)
         {
             p -= 64;
-            if (p == 0) return 0f;
+            if (p == 0) return 0;
             float sign;
             float normalized;
             if (p < 0)
@@ -633,7 +634,8 @@ namespace TechmaniaConverter
                 normalized = p / 63f;
             }
 
-            return ApplyCurve(normalized, PtOptions.instance.panCurve, PtOptions.instance.panParam) * sign;
+            float curved = ApplyCurve(normalized, PtOptions.instance.panCurve, PtOptions.instance.panParam) * sign;
+            return (int)MathF.Floor(curved * 100f);
         }
         #endregion
 
@@ -654,16 +656,16 @@ namespace TechmaniaConverter
         }
 
         private Note EventDataToNote(string filename, EventData e, Func<int, int> TickToPulse,
-            Dictionary<uint, float> trackVolume)
+            Dictionary<uint, int> trackVolumePercent)
         {
             int pulse = TickToPulse(e.Tick);
             int lane = TrackToLane(e.TrackId);
             string sound = e.Instrument != null ? e.Instrument.Name : "";
-            float volumeBase = trackVolume.ContainsKey(e.TrackId) ?
-                trackVolume[e.TrackId] : 1f;
-            if (PtOptions.instance.ignoreVolumeNotes) volumeBase = 1f;
-            float volume = IntVolumeToFloat(e.Vel) * volumeBase;
-            float pan = IntPanToFloat(e.Pan);
+            int volumeBasePercent = trackVolumePercent.ContainsKey(e.TrackId) ?
+                trackVolumePercent[e.TrackId] : 100;
+            if (PtOptions.instance.ignoreVolumeNotes) volumeBasePercent = 100;
+            int volumePercent = IntVolumeToPercent(e.Vel) * volumeBasePercent / 100;
+            int panPercent = IntPanToPercent(e.Pan);
             switch (e.Attribute)
             {
                 case 0:
@@ -675,8 +677,8 @@ namespace TechmaniaConverter
                             pulse = pulse,
                             lane = lane,
                             sound = sound,
-                            volume = volume,
-                            pan = pan,
+                            volumePercent = volumePercent,
+                            panPercent = panPercent,
                             endOfScan = false
                         };
                     }
@@ -688,8 +690,8 @@ namespace TechmaniaConverter
                             pulse = pulse,
                             lane = lane,
                             sound = sound,
-                            volume = volume,
-                            pan = pan,
+                            volumePercent = volumePercent,
+                            panPercent = panPercent,
                             curveType = global::CurveType.BSpline
                         };
                         dragNote.nodes.Add(new DragNode());
@@ -704,8 +706,8 @@ namespace TechmaniaConverter
                         pulse = pulse,
                         lane = lane,
                         sound = sound,
-                        volume = volume,
-                        pan = pan,
+                        volumePercent = volumePercent,
+                        panPercent = panPercent,
                         endOfScan = false
                     };
                 case 6:
@@ -715,8 +717,8 @@ namespace TechmaniaConverter
                         pulse = pulse,
                         lane = lane,
                         sound = sound,
-                        volume = volume,
-                        pan = pan,
+                        volumePercent = volumePercent,
+                        panPercent = panPercent,
                         endOfScan = false
                     };
                 case 10:
@@ -728,8 +730,8 @@ namespace TechmaniaConverter
                             pulse = pulse,
                             lane = lane,
                             sound = sound,
-                            volume = volume,
-                            pan = pan,
+                            volumePercent = volumePercent,
+                            panPercent = panPercent,
                             endOfScan = false
                         };
                     }
@@ -742,8 +744,8 @@ namespace TechmaniaConverter
                             lane = lane,
                             sound = sound,
                             duration = TickToPulse(e.Duration),
-                            volume = volume,
-                            pan = pan,
+                            volumePercent = volumePercent,
+                            panPercent = panPercent,
                             endOfScan = false
                         };
                     }
@@ -756,8 +758,8 @@ namespace TechmaniaConverter
                             pulse = pulse,
                             lane = lane,
                             sound = sound,
-                            volume = volume,
-                            pan = pan,
+                            volumePercent = volumePercent,
+                            panPercent = panPercent,
                             endOfScan = false
                         };
                     }
@@ -770,8 +772,8 @@ namespace TechmaniaConverter
                             lane = lane,
                             sound = sound,
                             duration = TickToPulse(e.Duration),
-                            volume = volume,
-                            pan = pan,
+                            volumePercent = volumePercent,
+                            panPercent = panPercent,
                             endOfScan = false
                         };
                     }
@@ -783,8 +785,8 @@ namespace TechmaniaConverter
                         lane = lane,
                         sound = sound,
                         duration = TickToPulse(e.Duration),
-                        volume = volume,
-                        pan = pan,
+                        volumePercent = volumePercent,
+                        panPercent = panPercent,
                         endOfScan = false
                     };
                 default:

@@ -1,10 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 public partial class Pattern
 {
-    // The "main" part is defined in Track.cs. This part contains
-    // editing routines and timing calculations.
+    // The "main" part is defined in Track.cs.
+
     #region Editing
     public bool HasNoteAt(int pulse, int lane)
     {
@@ -120,12 +123,22 @@ public partial class Pattern
 
     #region Timing
     // Sort BPM events by pulse, then fill their time fields.
-    // Enables CalculateTimeOfAllNotes, TimeToPulse and PulseToTime.
+    // Enables CalculateTimeOfAllNotes, GetLengthInSecondsAndScans,
+    // TimeToPulse, PulseToTime and CalculateRadar.
     public void PrepareForTimeCalculation()
     {
-        bpmEvents.Sort((BpmEvent e1, BpmEvent e2) =>
+        timeEvents = new List<TimeEvent>();
+        bpmEvents.ForEach(e => timeEvents.Add(e));
+        timeStops.ForEach(t => timeEvents.Add(t));
+        timeEvents.Sort((TimeEvent e1, TimeEvent e2) =>
         {
-            return e1.pulse - e2.pulse;
+            if (e1.pulse != e2.pulse)
+            {
+                return e1.pulse - e2.pulse;
+            }
+            if (e1.GetType() == e2.GetType()) return 0;
+            if (e1 is BpmEvent) return -1;
+            return 1;
         });
 
         float currentBpm = (float)patternMetadata.initBpm;
@@ -141,48 +154,73 @@ public partial class Pattern
         // second / pulse = 60f / (pulsesPerBeat * currentBpm)
         float secondsPerPulse = 60f / (pulsesPerBeat * currentBpm);
 
-        foreach (BpmEvent e in bpmEvents)
+        foreach (TimeEvent e in timeEvents)
         {
             e.time = currentTime +
                 secondsPerPulse * (e.pulse - currentPulse);
 
-            currentBpm = (float)e.bpm;
-            currentTime = e.time;
+            if (e is BpmEvent)
+            {
+                currentTime = e.time;
+                currentBpm = (float)(e as BpmEvent).bpm;
+                secondsPerPulse = 60f / (pulsesPerBeat * currentBpm);
+            }
+            else if (e is TimeStop)
+            {
+                float durationInSeconds = (e as TimeStop).duration *
+                    secondsPerPulse;
+                currentTime = e.time + durationInSeconds;
+                (e as TimeStop).endTime = currentTime;
+                (e as TimeStop).bpmAtStart = currentBpm;
+            }
+
             currentPulse = e.pulse;
-            secondsPerPulse = 60f / (pulsesPerBeat * currentBpm);
         }
     }
 
-    public void CalculateTimeOfAllNotes()
+    // Returns the pattern length between the start of the first
+    // non-empty scan, and the end of the last non-empty scan.
+    // Ignores end-of-scan.
+    public void GetLengthInSecondsAndScans(out float seconds,
+        out int scans)
     {
+        if (notes.Count == 0)
+        {
+            seconds = 0f;
+            scans = 0;
+            return;
+        }
+
+        int pulsesPerScan = pulsesPerBeat * patternMetadata.bps;
+        int minPulse = int.MaxValue;
+        int maxPulse = int.MinValue;
+
         foreach (Note n in notes)
         {
-            n.time = PulseToTime(n.pulse);
+            int pulse = n.pulse;
+            int endPulse = pulse;
             if (n is HoldNote)
             {
-                HoldNote h = n as HoldNote;
-                h.endTime = PulseToTime(h.pulse + h.duration);
-                /*
-                if (Ruleset.instance != null)
-                {
-                    h.gracePeriodStart = h.endTime -
-                        Ruleset.instance.longNoteGracePeriod;
-                }
-                */
+                endPulse += (n as HoldNote).duration;
             }
             if (n is DragNote)
             {
-                DragNote d = n as DragNote;
-                d.endTime = PulseToTime(d.pulse + d.Duration());
-                /*
-                if (Ruleset.instance != null)
-                {
-                    d.gracePeriodStart = d.endTime -
-                        Ruleset.instance.longNoteGracePeriod;
-                }
-                */
+                endPulse += (n as DragNote).Duration();
             }
+
+            if (pulse < minPulse) minPulse = pulse;
+            if (endPulse > maxPulse) maxPulse = endPulse;
         }
+
+        int firstScan = minPulse / pulsesPerScan;
+        float startOfFirstScan = PulseToTime(
+            firstScan * pulsesPerScan);
+        int lastScan = maxPulse / pulsesPerScan;
+        float endOfLastScan = PulseToTime(
+            (lastScan + 1) * pulsesPerScan);
+
+        seconds = endOfLastScan - startOfFirstScan;
+        scans = lastScan - firstScan + 1;
     }
 
     // Works for negative times too.
@@ -192,17 +230,29 @@ public partial class Pattern
         float referenceTime = (float)patternMetadata.firstBeatOffset;
         int referencePulse = 0;
 
-        // Find the immediate BpmEvent before specified pulse.
-        for (int i = bpmEvents.Count - 1; i >= 0; i--)
+        // Find the immediate TimeEvent before specified pulse.
+        for (int i = timeEvents.Count - 1; i >= 0; i--)
         {
-            BpmEvent e = bpmEvents[i];
-            if (e.time <= time)
+            TimeEvent e = timeEvents[i];
+            if (e.time > time) continue;
+            if (e.time == time) return e.pulse;
+
+            if (e is BpmEvent)
             {
-                referenceBpm = (float)e.bpm;
+                referenceBpm = (float)(e as BpmEvent).bpm;
                 referenceTime = e.time;
-                referencePulse = e.pulse;
-                break;
             }
+            else if (e is TimeStop)
+            {
+                if ((e as TimeStop).endTime >= time)
+                {
+                    return e.pulse;
+                }
+                referenceBpm = (float)(e as TimeStop).bpmAtStart;
+                referenceTime = (e as TimeStop).endTime;
+            }
+            referencePulse = e.pulse;
+            break;
         }
 
         float secondsPerPulse = 60f / (pulsesPerBeat * referenceBpm);
@@ -218,23 +268,42 @@ public partial class Pattern
         float referenceTime = (float)patternMetadata.firstBeatOffset;
         int referencePulse = 0;
 
-        // Find the immediate BpmEvent before specified pulse.
-        for (int i = bpmEvents.Count - 1; i >= 0; i--)
+        // Find the immediate TimeEvent before specified pulse.
+        for (int i = timeEvents.Count - 1; i >= 0; i--)
         {
-            BpmEvent e = bpmEvents[i];
-            if (e.pulse <= pulse)
+            TimeEvent e = timeEvents[i];
+            if (e.pulse > pulse) continue;
+            if (e.pulse == pulse) return e.time;
+
+            if (e is BpmEvent)
             {
-                referenceBpm = (float)e.bpm;
+                referenceBpm = (float)(e as BpmEvent).bpm;
                 referenceTime = e.time;
-                referencePulse = e.pulse;
-                break;
             }
+            else if (e is TimeStop)
+            {
+                referenceBpm = (float)(e as TimeStop).bpmAtStart;
+                referenceTime = (e as TimeStop).endTime;
+            }
+            referencePulse = e.pulse;
+            break;
         }
 
         float secondsPerPulse = 60f / (pulsesPerBeat * referenceBpm);
 
         return referenceTime +
             secondsPerPulse * (pulse - referencePulse);
+    }
+
+    public float GetBPMAt(int pulse)
+    {
+        float bpm = (float)patternMetadata.initBpm;
+        foreach (BpmEvent e in bpmEvents)
+        {
+            if (e.pulse > pulse) break;
+            bpm = (float)e.bpm;
+        }
+        return bpm;
     }
     #endregion
 }
