@@ -80,7 +80,7 @@ namespace ConverterWinForm
                 return;
             }
 
-            GetTechFolder(converter.track.trackMetadata);
+            techFolder = Utils.GetTechFolder(tracksFolder, converter.track.trackMetadata);
             string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
                 + converter.GetReport();
             reportTextBox.Text = report;
@@ -171,7 +171,7 @@ namespace ConverterWinForm
             }
 
             converter.GenerateReport();
-            GetTechFolder(converter.track.trackMetadata);
+            techFolder = Utils.GetTechFolder(tracksFolder, converter.track.trackMetadata);
             string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
                 + converter.GetReport();
             reportTextBox.Text = report;
@@ -230,29 +230,6 @@ namespace ConverterWinForm
                 tracksFolder = trackFolderTextBox.Text;
             }
             RefreshLoadButtons();
-        }
-
-        private void GetTechFolder(TrackMetadata trackMetadata)
-        {
-            string filteredTitle = RemoveInvalidCharactersFromPath(trackMetadata.title);
-            string filteredArtist = RemoveInvalidCharactersFromPath(trackMetadata.artist);
-            string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-
-            techFolder = Path.Combine(tracksFolder, $"{filteredArtist} - {filteredTitle} - {timestamp}");
-        }
-
-        private static string RemoveInvalidCharactersFromPath(string input)
-        {
-            StringBuilder builder = new StringBuilder();
-            const string invalidChars = "\\/*:?\"<>|";
-            foreach (char c in input)
-            {
-                if (!invalidChars.Contains(c.ToString()))
-                {
-                    builder.Append(c);
-                }
-            }
-            return builder.ToString();
         }
 
         private string tech;
@@ -321,35 +298,7 @@ namespace ConverterWinForm
             {
                 string source = pair.Item1;
                 string dest = pair.Item2;
-                if (source != dest)
-                {
-                    StringBuilder stderr = new StringBuilder();
-                    Process p = new Process();
-                    ProcessStartInfo startInfo = p.StartInfo;
-                    startInfo.FileName = "ffmpeg";
-                    startInfo.Arguments = $"-i \"{source}\" \"{dest}\"";
-                    startInfo.CreateNoWindow = false;
-                    startInfo.ErrorDialog = true;
-                    startInfo.UseShellExecute = false;
-                    // Uncomment this to receive stderr. However, ffmpeg writes its progress to stderr, so the ffmpeg window would be empty.
-                    // startInfo.RedirectStandardError = true;
-                    p.ErrorDataReceived += (sender, args) => stderr.AppendLine(args.Data);
-
-                    p.Start();
-                    if (p == null)
-                    {
-                        throw new Exception("Failed to start video converter.");
-                    }
-                    if (startInfo.RedirectStandardError)
-                    {
-                        p.BeginErrorReadLine();
-                    }
-                    p.WaitForExit();
-                    if (p.ExitCode != 0)
-                    {
-                        throw new Exception($"Video converter reports that it has failed.");
-                    }
-                }
+                Utils.ConvertVideo(source, dest);
                 tasksDone++;
                 worker.ReportProgress(tasksDone * 100 / numTasks);
             }

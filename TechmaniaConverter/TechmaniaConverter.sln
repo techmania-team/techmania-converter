@@ -5,11 +5,9 @@ VisualStudioVersion = 16.0.30709.132
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConverterWinForm", "ConverterWinForm\ConverterWinForm.csproj", "{DB81A76A-D0F1-432E-851C-24E450710198}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConverterBackend", "ConverterBackend\ConverterBackend.csproj", "{36BA17EC-C550-4806-B614-9D8FF8B8E318}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConverterBackend", "ConverterBackend\ConverterBackend.csproj", "{36BA17EC-C550-4806-B614-9D8FF8B8E318}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConverterCommonFrontend", "ConverterCommonFrontend\ConverterCommonFrontend.csproj", "{8D2181B8-EE15-42C2-9349-94D37EF3CFA8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConverterCLI", "ConverterCLI\ConverterCLI.csproj", "{E8D45E67-5BF8-4C50-ACDD-178D12FB8736}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConverterCLI", "ConverterCLI\ConverterCLI.csproj", "{E663F24F-FF53-49A2-A739-17CA8566E602}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +23,10 @@ Global
 		{36BA17EC-C550-4806-B614-9D8FF8B8E318}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36BA17EC-C550-4806-B614-9D8FF8B8E318}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36BA17EC-C550-4806-B614-9D8FF8B8E318}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8D2181B8-EE15-42C2-9349-94D37EF3CFA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8D2181B8-EE15-42C2-9349-94D37EF3CFA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8D2181B8-EE15-42C2-9349-94D37EF3CFA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8D2181B8-EE15-42C2-9349-94D37EF3CFA8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E8D45E67-5BF8-4C50-ACDD-178D12FB8736}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E8D45E67-5BF8-4C50-ACDD-178D12FB8736}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E8D45E67-5BF8-4C50-ACDD-178D12FB8736}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E8D45E67-5BF8-4C50-ACDD-178D12FB8736}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E663F24F-FF53-49A2-A739-17CA8566E602}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E663F24F-FF53-49A2-A739-17CA8566E602}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E663F24F-FF53-49A2-A739-17CA8566E602}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E663F24F-FF53-49A2-A739-17CA8566E602}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
