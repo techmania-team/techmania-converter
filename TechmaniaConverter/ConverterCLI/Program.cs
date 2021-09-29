@@ -40,15 +40,23 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
                 {
                     bmsPath = a.Substring("--bmsPath=".Length);
                 }
-                if (a.StartsWith("--ptFolder="))
+                else if (a.StartsWith("--ptFolder="))
                 {
                     ptFolder = a.Substring("--ptFolder=".Length);
                 }
-                if (a.StartsWith("--tracksFolder="))
+                else if (a.StartsWith("--tracksFolder="))
                 {
                     tracksFolder = a.Substring("--tracksFolder=".Length);
                 }
-                if (a == "--silent") silent = true;
+                else if (a == "--silent")
+                {
+                    silent = true;
+                }
+                else
+                {
+                    Console.WriteLine($"Unrecognized flag: " + a);
+                    return 1;
+                }
             }
 
             if (bmsPath == null && ptFolder == null)
