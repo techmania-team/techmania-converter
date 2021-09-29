@@ -79,7 +79,7 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
             List<Tuple<string, string>> filesToConvert = new List<Tuple<string, string>>();  // Full paths.
             if (bmsPath != null)
             {
-                LoadAndConvertBms(bmsPath, tracksFolder, out tech, out techFolder, out report, filesToCopy);
+                Utils.LoadAndConvertBms(bmsPath, tracksFolder, out tech, out techFolder, out report, filesToCopy);
             }
             else
             {
@@ -97,6 +97,7 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
                 string confirmation = Console.ReadLine();
                 if (!confirmation.ToLower().StartsWith('y'))
                 {
+                    Console.WriteLine("Cancelled.");
                     return;
                 }
             }
@@ -105,57 +106,6 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
             if (!silent)
             {
                 Console.WriteLine("Conversion successful.");
-            }
-        }
-
-        private void LoadAndConvertBms(string bmsPath, string tracksFolder, out string tech, out string techFolder, out string report, List<Tuple<string, string>> filesToCopy)
-        {
-            string bmsFolder = Path.GetDirectoryName(bmsPath);
-
-            // Load .bms, and also enumerate all files, so the converter can look
-            // for alternative extensions.
-            string bms;
-            string[] allFilesInBmsFolder;
-            try
-            {
-                bms = File.ReadAllText(bmsPath);
-                allFilesInBmsFolder = Directory.GetFiles(bmsFolder);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Could not load --bmsPath.", ex);
-            }
-
-            BmsConverter converter = new BmsConverter();
-            converter.allFilenamesInBmsFolder = new HashSet<string>();
-            foreach (string file in allFilesInBmsFolder)
-            {
-                converter.allFilenamesInBmsFolder.Add(Path.GetFileName(file).ToLower());
-            }
-
-            try
-            {
-                converter.ConvertAndStore(bms);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("An error occurred when parsing the .bms file.", ex);
-            }
-
-            tech = converter.Serialize();
-            techFolder = Utils.GetTechFolder(tracksFolder, converter.track.trackMetadata);
-            report = converter.GetReport();
-            foreach (string file in converter.keysoundIndexToName.Values)
-            {
-                if (file == "") continue;
-                filesToCopy.Add(new Tuple<string, string>(
-                    Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
-            }
-            foreach (string file in converter.bmpIndexToName.Values)
-            {
-                if (file == "") continue;
-                filesToCopy.Add(new Tuple<string, string>(
-                    Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
             }
         }
 

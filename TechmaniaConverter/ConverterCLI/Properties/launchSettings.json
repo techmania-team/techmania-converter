@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ConverterCLI": {
+      "commandName": "Project",
+      "commandLineArgs": "--bmsPath=\"C:\\Games\\TECHNIKA Modding\\[Nego_tiator]Paracelestia\\Paracelestia_A.bms\" --tracksFolder=\"C:\\Code\\techmania\\TECHMANIA\\Builds\\Tracks\\Conversion test\""
+    }
+  }
+}

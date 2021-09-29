@@ -30,7 +30,6 @@ namespace ConverterWinForm
 
         #region Bms input
         private string bmsPath;
-        private string bmsFolder;
         private void loadBmsButton_Click(object sender, EventArgs e)
         {
             convertButton.Enabled = false;
@@ -41,64 +40,31 @@ namespace ConverterWinForm
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 bmsPath = dialog.FileName;
-                bmsFolder = Path.GetDirectoryName(bmsPath);
             }
             else
             {
                 return;
             }
 
-            // Load .bms, and also enumerate all files, so the converter can look
-            // for alternative extensions.
-            string bms;
-            string[] allFilesInBmsFolder;
-            try
-            {
-                bms = File.ReadAllText(bmsPath);
-                allFilesInBmsFolder = Directory.GetFiles(bmsFolder);
-            }
-            catch (Exception ex)
-            {
-                reportTextBox.Text = "Could not load .bms:\r\n\r\n" + ex.ToString();
-                return;
-            }
-
-            BmsConverter converter = new BmsConverter();
-            converter.allFilenamesInBmsFolder = new HashSet<string>();
-            foreach (string file in allFilesInBmsFolder)
-            {
-                converter.allFilenamesInBmsFolder.Add(Path.GetFileName(file).ToLower());
-            }
-
-            try
-            {
-                converter.ConvertAndStore(bms);
-            }
-            catch (Exception ex)
-            {
-                reportTextBox.Text = "An error occurred when parsing .bms file:\r\n\r\n" + ex.ToString();
-                return;
-            }
-
-            techFolder = Utils.GetTechFolder(tracksFolder, converter.track.trackMetadata);
-            string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
-                + converter.GetReport();
-            reportTextBox.Text = report;
-
-            tech = converter.Serialize();
+            string report = "";
             filesToCopy = new List<Tuple<string, string>>();
-            foreach (string file in converter.keysoundIndexToName.Values)
+            try
             {
-                if (file == "") continue;
-                filesToCopy.Add(new Tuple<string, string>(
-                    Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
+                Utils.LoadAndConvertBms(bmsPath, tracksFolder, out tech, out techFolder, out report, filesToCopy);
             }
-            foreach (string file in converter.bmpIndexToName.Values)
+            catch (Exception ex)
             {
-                if (file == "") continue;
-                filesToCopy.Add(new Tuple<string, string>(
-                    Path.Combine(bmsFolder, file), Path.Combine(techFolder, file)));
+                if (ex.InnerException != null)
+                {
+                    reportTextBox.Text = ex.Message + ex.InnerException.ToString();
+                }
+                else
+                {
+                    reportTextBox.Text = ex.ToString();
+                }
             }
+
+            reportTextBox.Text = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n" + report;
             convertButton.Enabled = true;
         }
         #endregion
