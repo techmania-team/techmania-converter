@@ -202,6 +202,8 @@ namespace ConverterBackend
             SetPatternDefaultScrollSpeed("Pop HD", PtOptions.instance.scrollSpeedDefaultsToOneOnPop[1]);
             SetPatternDefaultScrollSpeed("Pop MX", PtOptions.instance.scrollSpeedDefaultsToOneOnPop[2]);
             SetPatternDefaultScrollSpeed("Pop EX", PtOptions.instance.scrollSpeedDefaultsToOneOnPop[3]);
+
+            // Adjust drag notes, if necessary.
             track.patterns.ForEach(p => AdjustDragNoteAnchorsForScrollSpeed(p));
 
             // Search for disc image.
@@ -343,6 +345,7 @@ namespace ConverterBackend
             Pattern pattern = new Pattern();
             pattern.patternMetadata.patternName = patternNameBuilder.ToString();
             pattern.patternMetadata.controlScheme = ControlScheme.Touch;
+            pattern.patternMetadata.playableLanes = 4;
             pattern.patternMetadata.bps = bps;
             pattern.patternMetadata.initBpm = parsedPt.Tempo;
             pattern.patternMetadata.waitForEndOfBga = false;
@@ -365,6 +368,7 @@ namespace ConverterBackend
             // - tracks 8-15 are ignored.
             List<EventData> specialEvents = new List<EventData>();
             Dictionary<uint, int> trackVolumePercent = new Dictionary<uint, int>();
+            bool anyNoteInLane2 = false, anyNoteInLane3 = false;
             foreach (TrackData t in parsedPt.Tracks)
             {
                 foreach (EventData e in t.Events)
@@ -403,10 +407,13 @@ namespace ConverterBackend
                                 break;
                             }
                             Note note = EventDataToNote(filename, e, TickToPulse, trackVolumePercent);
-                            if (note != null)
+                            if (note == null)
                             {
-                                pattern.notes.Add(note);
+                                break;
                             }
+                            pattern.notes.Add(note);
+                            if (note.lane == 2) anyNoteInLane2 = true;
+                            if (note.lane == 3) anyNoteInLane3 = true;
                             break;
                         case EventType.Volume:
                             trackVolumePercent[e.TrackId] = IntVolumeToPercent(e.Volume);
@@ -427,6 +434,14 @@ namespace ConverterBackend
                             break;
                     }
                 }
+            }
+            if (!anyNoteInLane2 && !anyNoteInLane3)
+            {
+                pattern.patternMetadata.playableLanes = 2;
+            }
+            else if (!anyNoteInLane3)
+            {
+                pattern.patternMetadata.playableLanes = 3;
             }
 
             // 2nd pass: process chain and repeat notes. Also collect all drag notes
@@ -654,6 +669,7 @@ namespace ConverterBackend
             return 8 / scrollSpeed;
         }
 
+        // Returns null on unknown attribute.
         private Note EventDataToNote(string filename, EventData e, Func<int, int> TickToPulse,
             Dictionary<uint, int> trackVolumePercent)
         {
