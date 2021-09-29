@@ -17,50 +17,6 @@ namespace ConverterWinForm
         private const string exponentLabel = "Exponent:";
         private const string baseLabel = "Base:";
 
-        #region Save and load
-        private static string GetOptionsFolder()
-        {
-            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "TECHMANIA Converter");
-            Directory.CreateDirectory(folder);
-            return folder;
-        }
-
-        private static string OptionsFilename()
-        {
-            return Path.Combine(GetOptionsFolder(), "PtOptions.json");
-        }
-
-        private static void SaveOptions()
-        {
-            string serialized = System.Text.Json.JsonSerializer.Serialize(PtOptions.instance,
-                typeof(PtOptions),
-                new System.Text.Json.JsonSerializerOptions()
-                {
-                    IncludeFields = true,
-                    WriteIndented = true
-                });
-            File.WriteAllText(OptionsFilename(), serialized);
-        }
-
-        public static void LoadOrCreateOptions()
-        {
-            if (File.Exists(OptionsFilename()))
-            {
-                string serialized = File.ReadAllText(OptionsFilename());
-                PtOptions.instance = System.Text.Json.JsonSerializer.Deserialize(serialized, typeof(PtOptions),
-                    new System.Text.Json.JsonSerializerOptions()
-                    {
-                        IncludeFields = true
-                    }) as PtOptions;
-            }
-            else
-            {
-                PtOptions.instance = new PtOptions();
-            }
-        }
-        #endregion
-
         public PtOptionsForm()
         {
             InitializeComponent();
@@ -138,7 +94,7 @@ namespace ConverterWinForm
             };
             PtOptions.instance.loadScrollSpeedFromTrack18 = loadScrollSpeedFromTrack18CheckBox.Checked;
 
-            SaveOptions();
+            PtOptionsUtils.SaveOptions();
             Close();
         }
 

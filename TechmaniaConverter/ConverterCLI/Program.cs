@@ -91,7 +91,8 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
             }
             else
             {
-                LoadAndConvertPt(ptFolder, tracksFolder, out tech, out techFolder, out report, filesToCopy, filesToConvert);
+                PtOptionsUtils.LoadOrCreateOptions();
+                Utils.LoadAndConvertPt(ptFolder, tracksFolder, out tech, out techFolder, out report, filesToCopy, filesToConvert);
             }
 
             if (!silent)
@@ -114,94 +115,6 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
             if (!silent)
             {
                 Console.WriteLine("Conversion successful.");
-            }
-        }
-
-        private void LoadAndConvertPt(string ptFolder, string tracksFolder, out string tech, out string techFolder, out string report, List<Tuple<string, string>> filesToCopy, List<Tuple<string, string>> filesToConvert)
-        {
-            // Look for all .pt files in the .pt folder.
-            List<string> fullPaths = new List<string>();
-            try
-            {
-                // GetFiles is case insensitive.
-                foreach (string file in Directory.EnumerateFiles(ptFolder, "*_star_?.pt"))
-                {
-                    fullPaths.Add(file.ToLower());
-                }
-                foreach (string file in Directory.EnumerateFiles(ptFolder, "*_pop_?.pt"))
-                {
-                    fullPaths.Add(file.ToLower());
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Could not open --ptFolder.", ex);
-            }
-
-            if (fullPaths.Count == 0)
-            {
-                throw new Exception("Did not find any .pt file in --ptFolder.");
-            }
-
-            PtConverter converter = new PtConverter();
-            try
-            {
-                // Extract the song's short name. This is the only guaranteed piece of metadata we can get.
-                converter.ExtractShortNameAndInitialize(Path.GetFileName(fullPaths[0]));
-
-                // Load and parse the pt files.
-                foreach (string fullPath in fullPaths)
-                {
-                    string filename = Path.GetFileName(fullPath);
-                    DJMaxEditor.DJMax.PlayerData parsedPt = PtLoader.Load(fullPath);
-                    converter.ConvertAndAddPattern(filename, parsedPt);
-                }
-
-                // Search for any other metadata we can find.
-                converter.SearchForMetadata(ptFolder);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("An error occurred when parsing .pt file.", ex);
-            }
-
-            tech = converter.Serialize();
-            techFolder = Utils.GetTechFolder(tracksFolder, converter.track.trackMetadata);
-            converter.GenerateReport();
-            report = converter.GetReport();
-
-            foreach (string file in converter.allInstruments)
-            {
-                filesToCopy.Add(new Tuple<string, string>(
-                    Path.Combine(ptFolder, file), Path.Combine(techFolder, file)));
-            }
-            if (converter.sourceDiscImagePath != null)
-            {
-                filesToCopy.Add(new Tuple<string, string>(converter.sourceDiscImagePath,
-                    Path.Combine(techFolder, converter.track.trackMetadata.eyecatchImage)));
-            }
-            if (converter.sourceEyecatchPath != null)
-            {
-                filesToCopy.Add(new Tuple<string, string>(converter.sourceEyecatchPath,
-                    Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.backImage)));
-            }
-            if (converter.sourcePreviewPath != null)
-            {
-                filesToCopy.Add(new Tuple<string, string>(converter.sourcePreviewPath,
-                    Path.Combine(techFolder, converter.track.trackMetadata.previewTrack)));
-            }
-            if (converter.sourceBgaPath != null)
-            {
-                Tuple<string, string> bgaTuple = new Tuple<string, string>(converter.sourceBgaPath,
-                    Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.bga));
-                if (converter.bgaConversionRequired)
-                {
-                    filesToConvert.Add(bgaTuple);
-                }
-                else
-                {
-                    filesToCopy.Add(bgaTuple);
-                }
             }
         }
 

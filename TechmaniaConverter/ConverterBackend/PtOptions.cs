@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,6 +42,51 @@ namespace ConverterBackend
             scrollSpeedDefaultsToOneOnStar = new List<bool>() { false, false, false, false };
             scrollSpeedDefaultsToOneOnPop = new List<bool>() { false, false, false, false };
             loadScrollSpeedFromTrack18 = false;
+        }
+    }
+
+    public class PtOptionsUtils
+    {
+        private static string GetOptionsFolder()
+        {
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "TECHMANIA Converter");
+            Directory.CreateDirectory(folder);
+            return folder;
+        }
+
+        private static string OptionsFilename()
+        {
+            return Path.Combine(GetOptionsFolder(), "PtOptions.json");
+        }
+
+        public static void SaveOptions()
+        {
+            string serialized = System.Text.Json.JsonSerializer.Serialize(PtOptions.instance,
+                typeof(PtOptions),
+                new System.Text.Json.JsonSerializerOptions()
+                {
+                    IncludeFields = true,
+                    WriteIndented = true
+                });
+            File.WriteAllText(OptionsFilename(), serialized);
+        }
+
+        public static void LoadOrCreateOptions()
+        {
+            if (File.Exists(OptionsFilename()))
+            {
+                string serialized = File.ReadAllText(OptionsFilename());
+                PtOptions.instance = System.Text.Json.JsonSerializer.Deserialize(serialized, typeof(PtOptions),
+                    new System.Text.Json.JsonSerializerOptions()
+                    {
+                        IncludeFields = true
+                    }) as PtOptions;
+            }
+            else
+            {
+                PtOptions.instance = new PtOptions();
+            }
         }
     }
 }

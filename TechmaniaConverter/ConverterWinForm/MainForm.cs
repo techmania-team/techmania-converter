@@ -18,7 +18,7 @@ namespace ConverterWinForm
         public MainForm()
         {
             InitializeComponent();
-            PtOptionsForm.LoadOrCreateOptions();
+            PtOptionsUtils.LoadOrCreateOptions();
             RefreshLoadButtons();
         }
 
@@ -29,11 +29,11 @@ namespace ConverterWinForm
         }
 
         #region Bms input
-        private string bmsPath;
         private void loadBmsButton_Click(object sender, EventArgs e)
         {
             convertButton.Enabled = false;
 
+            string bmsPath;
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = "BMS Files (*.bms;*.bme;*.bml;*.pms)|*.bms;*.bme;*.bml;*.pms|All Files (*.*)|*.*";
             dialog.Multiselect = false;
@@ -62,6 +62,7 @@ namespace ConverterWinForm
                 {
                     reportTextBox.Text = ex.ToString();
                 }
+                return;
             }
 
             reportTextBox.Text = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n" + report;
@@ -70,11 +71,11 @@ namespace ConverterWinForm
         #endregion
 
         #region Pt input
-        private string ptFolder;
         private void loadPtButton_Click(object sender, EventArgs e)
         {
             convertButton.Enabled = false;
 
+            string ptFolder;
             FolderBrowserDialog dialog = new FolderBrowserDialog();
             dialog.Description = "Select folder containing .pt files:";
             dialog.UseDescriptionForTitle = true;
@@ -87,98 +88,27 @@ namespace ConverterWinForm
                 return;
             }
 
-            // Look for all .pt files in this folder.
-            List<string> fullPaths = new List<string>();
-            try
-            {
-                // GetFiles is case insensitive.
-                foreach (string file in Directory.EnumerateFiles(ptFolder, "*_star_?.pt"))
-                {
-                    fullPaths.Add(file.ToLower());
-                }
-                foreach (string file in Directory.EnumerateFiles(ptFolder, "*_pop_?.pt"))
-                {
-                    fullPaths.Add(file.ToLower());
-                }
-            }
-            catch (Exception ex)
-            {
-                reportTextBox.Text = "Could not open the specified folder:\r\n\r\n" + ex.ToString();
-                return;
-            }
-
-            if (fullPaths.Count == 0)
-            {
-                reportTextBox.Text = "Did not find any .pt file in the specified folder. Please select a folder containing .pt files.";
-                return;
-            }
-
-            PtConverter converter = new PtConverter();
-            try
-            {
-                // Extract the song's short name. This is the only guaranteed piece of metadata we can get.
-                converter.ExtractShortNameAndInitialize(Path.GetFileName(fullPaths[0]));
-
-                // Load and parse the pt files.
-                foreach (string fullPath in fullPaths)
-                {
-                    string filename = Path.GetFileName(fullPath);
-                    DJMaxEditor.DJMax.PlayerData parsedPt = PtLoader.Load(fullPath);
-                    converter.ConvertAndAddPattern(filename, parsedPt);
-                }
-
-                // Search for any other metadata we can find.
-                converter.SearchForMetadata(ptFolder);
-            }
-            catch (Exception ex)
-            {
-                reportTextBox.Text = "An error occurred when parsing .pt file:\r\n\r\n" + ex.ToString();
-                return;
-            }
-
-            converter.GenerateReport();
-            techFolder = Utils.GetTechFolder(tracksFolder, converter.track.trackMetadata);
-            string report = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n"
-                + converter.GetReport();
-            reportTextBox.Text = report;
-
-            // Collect files to write, copy and/or convert.
-            tech = converter.Serialize();
+            string report = "";
             filesToCopy = new List<Tuple<string, string>>();
             filesToConvert = new List<Tuple<string, string>>();
-            foreach (string file in converter.allInstruments)
+            try
             {
-                filesToCopy.Add(new Tuple<string, string>(
-                    Path.Combine(ptFolder, file), Path.Combine(techFolder, file)));
+                Utils.LoadAndConvertPt(ptFolder, tracksFolder, out tech, out techFolder, out report, filesToCopy, filesToConvert);
             }
-            if (converter.sourceDiscImagePath != null)
+            catch (Exception ex)
             {
-                filesToCopy.Add(new Tuple<string, string>(converter.sourceDiscImagePath,
-                    Path.Combine(techFolder, converter.track.trackMetadata.eyecatchImage)));
-            }
-            if (converter.sourceEyecatchPath != null)
-            {
-                filesToCopy.Add(new Tuple<string, string>(converter.sourceEyecatchPath,
-                    Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.backImage)));
-            }
-            if (converter.sourcePreviewPath != null)
-            {
-                filesToCopy.Add(new Tuple<string, string>(converter.sourcePreviewPath,
-                    Path.Combine(techFolder, converter.track.trackMetadata.previewTrack)));
-            }
-            if (converter.sourceBgaPath != null)
-            {
-                Tuple<string, string> bgaTuple = new Tuple<string, string>(converter.sourceBgaPath,
-                    Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.bga));
-                if (converter.bgaConversionRequired)
+                if (ex.InnerException != null)
                 {
-                    filesToConvert.Add(bgaTuple);
+                    reportTextBox.Text = ex.Message + ex.InnerException.ToString();
                 }
                 else
                 {
-                    filesToCopy.Add(bgaTuple);
+                    reportTextBox.Text = ex.ToString();
                 }
+                return;
             }
+
+            reportTextBox.Text = $"Converted track will be written to:\r\n{techFolder}\r\n\r\n" + report;
             convertButton.Enabled = true;
         }
         #endregion
