@@ -556,6 +556,7 @@ namespace ConverterBackend
                             }
                         }
                         anchorLane = (e.Attribute - 60f) * distanceToPreviousNode / 5400f;
+                        anchorLane = anchorLane / 4f * pattern.patternMetadata.playableLanes;
                     }
 
                     if (d.nodes[^1].anchor.pulse == anchorPulse)
