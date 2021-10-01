@@ -2,7 +2,7 @@
   "profiles": {
     "ConverterCLI": {
       "commandName": "Project",
-      "commandLineArgs": "--ptFolder=\"C:\\Games\\TECHNIKA 3 Emulated Root\\pattern\\xeus\" --tracksFolder=\"C:\\Code\\techmania\\TECHMANIA\\Builds\\Tracks\\Conversion test\""
+      "commandLineArgs": "--ptFolder=\"foo\" --tracksFolder=\"bar\""
     }
   }
 }
