@@ -134,6 +134,16 @@ namespace ConverterBackend
             }
         }
 
+        private List<int> HpDeltaDuringFeverFromHpDelta(List<int> hpDelta) => new List<int>()
+            {
+                hpDelta[0],
+                hpDelta[0],  // green MAX uses rainbow MAX's delta
+                hpDelta[1],  // COOL uses green MAX's delta
+                hpDelta[3],
+                hpDelta[4],
+                hpDelta[5]
+            };
+
         private LegacyRulesetOverride ReadBaseRule(string baseRuleFile)
         {
             LegacyRulesetOverride rule = new LegacyRulesetOverride();
@@ -218,20 +228,11 @@ namespace ConverterBackend
                 attributeToHpDelta("OnePointFail")
             };
 
-            Func<List<int>, List<int>> hpDeltaDuringFeverFromHpDelta = (List<int> hpDelta) => new List<int>()
-            {
-                hpDelta[0],
-                hpDelta[1],
-                hpDelta[2],
-                hpDelta[3],
-                hpDelta[4],
-                hpDelta[5]
-            };
-            rule.hpDeltaBasicDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaBasic);
-            rule.hpDeltaDragDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaDrag);
-            rule.hpDeltaHoldDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaHold);
-            rule.hpDeltaChainDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaChain);
-            rule.hpDeltaRepeatDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaRepeat);
+            rule.hpDeltaBasicDuringFever = HpDeltaDuringFeverFromHpDelta(rule.hpDeltaBasic);
+            rule.hpDeltaDragDuringFever = HpDeltaDuringFeverFromHpDelta(rule.hpDeltaDrag);
+            rule.hpDeltaHoldDuringFever = HpDeltaDuringFeverFromHpDelta(rule.hpDeltaHold);
+            rule.hpDeltaChainDuringFever = HpDeltaDuringFeverFromHpDelta(rule.hpDeltaChain);
+            rule.hpDeltaRepeatDuringFever = HpDeltaDuringFeverFromHpDelta(rule.hpDeltaRepeat);
 
             return rule;
         }
@@ -239,6 +240,56 @@ namespace ConverterBackend
         private LegacyRulesetOverride ReadSongRule(string ruleFile)
         {
             LegacyRulesetOverride rule = new LegacyRulesetOverride();
+
+            string[] lines = File.ReadAllLines(ruleFile);
+            int lineNumber = 0;
+            Action<string> proceedToLine = (string prefix) =>
+            {
+                while (lineNumber < lines.Length)
+                {
+                    if (lines[lineNumber].StartsWith(prefix)) return;
+                    lineNumber++;
+                }
+            };
+            Func<string, float> readNumber = (string prefix) =>
+            {
+                string[] splits = lines[lineNumber].Split(" = ");
+                return float.Parse(splits[1]);
+            };
+
+            proceedToLine("[JudgmentDelta]");
+            rule.timeWindows = new List<float>()
+            {
+                readNumber("JUDGMENT_MISS") * kDefaultTickToPulse,
+                readNumber("JUDGMENT_FAIR") * kDefaultTickToPulse,
+                readNumber("JUDGMENT_GREAT") * kDefaultTickToPulse,
+                readNumber("JUDGMENT_PERFECT") * kDefaultTickToPulse,
+                readNumber("JUDGMENT_PERFECT2") * kDefaultTickToPulse
+            };
+            rule.timeWindows.Reverse();
+
+            proceedToLine("[GaugeUpDownRate]");
+            rule.hpDeltaBasic = new List<int>()
+            {
+                (int)(readNumber("JUDGMENT_FAIL") * kHpDeltaCoeff),
+                (int)(readNumber("JUDGMENT_MISS") * kHpDeltaCoeff),
+                (int)(readNumber("JUDGMENT_FAIR") * kHpDeltaCoeff),
+                (int)(readNumber("JUDGMENT_GREAT") * kHpDeltaCoeff),
+                (int)(readNumber("JUDGMENT_PERFECT") * kHpDeltaCoeff),
+                (int)(readNumber("JUDGMENT_PERFECT2") * kHpDeltaCoeff),
+            };
+            rule.hpDeltaBasic.Reverse();
+            rule.hpDeltaDrag = new List<int>(rule.hpDeltaBasic);
+            rule.hpDeltaHold = new List<int>(rule.hpDeltaBasic);
+            rule.hpDeltaChain = new List<int>(rule.hpDeltaBasic);
+            rule.hpDeltaRepeat = new List<int>(rule.hpDeltaBasic);
+
+            rule.hpDeltaBasicDuringFever = HpDeltaDuringFeverFromHpDelta(rule.hpDeltaBasic);
+            rule.hpDeltaDragDuringFever = new List<int>(rule.hpDeltaBasicDuringFever);
+            rule.hpDeltaHoldDuringFever = new List<int>(rule.hpDeltaBasicDuringFever);
+            rule.hpDeltaChainDuringFever = new List<int>(rule.hpDeltaBasicDuringFever);
+            rule.hpDeltaRepeatDuringFever = new List<int>(rule.hpDeltaBasicDuringFever);
+
             return rule;
         }
 
