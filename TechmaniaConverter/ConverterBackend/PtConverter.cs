@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace ConverterBackend
 {
@@ -32,6 +33,9 @@ namespace ConverterBackend
         private HashSet<Pattern> patternsWithScrollSpeedSet;
 
         #region Metadata
+        private const float kDefaultTickToPulse = Pattern.pulsesPerBeat / 192f;  // This disregards BPS and assumes 192 ticks per measure.
+        private const float kHpDeltaCoeff = 100f;
+
         public void ExtractShortNameAndInitialize(string filename)
         {
             Match match = Regex.Match(filename, @"(.*)_(star|pop)_[1-4]\.pt");
@@ -128,6 +132,120 @@ namespace ConverterBackend
                     node.anchor.lane *= 0.5f;
                 }
             }
+        }
+
+        private LegacyRulesetOverride ReadBaseRule(string baseRuleFile)
+        {
+            LegacyRulesetOverride rule = new LegacyRulesetOverride();
+
+            using StreamReader stream = new StreamReader(baseRuleFile);
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.CloseInput = true;
+            using XmlReader reader = XmlReader.Create(stream, settings);
+
+            Action<string> proceedToElement = (string elementName) =>
+            {
+                while (reader.Read())
+                {
+                    if (reader.NodeType != XmlNodeType.Element) continue;
+                    if (reader.Name == elementName) break;
+                }
+            };
+            
+            proceedToElement("PopMode");
+            proceedToElement("Delta");
+            proceedToElement("Delta");
+            Func<string, float> attributeToPulse = (string attribute) => float.Parse(reader.GetAttribute(attribute)) * kDefaultTickToPulse;
+            rule.timeWindows = new List<float>()
+            {
+                attributeToPulse("NormalPerPect2"),
+                attributeToPulse("NormalPerPect"),
+                attributeToPulse("NormalGreat"),
+                attributeToPulse("NormalFair"),
+                attributeToPulse("NormalMiss")
+            };
+
+            proceedToElement("Gauge");
+            Func<string, int> attributeToHpDelta = (string attribute) => (int)(float.Parse(reader.GetAttribute(attribute)) * kHpDeltaCoeff);
+            proceedToElement("Gauge");
+            rule.hpDeltaBasic = new List<int>()
+            {
+                attributeToHpDelta("NormalPerPect2"),
+                attributeToHpDelta("NormalPerPect"),
+                attributeToHpDelta("NormalGreat"),
+                attributeToHpDelta("NormalFair"),
+                attributeToHpDelta("NormalMiss"),
+                attributeToHpDelta("NormalFail")
+            };
+            proceedToElement("Gauge");
+            rule.hpDeltaDrag = new List<int>()
+            {
+                attributeToHpDelta("LongPerPect2"),
+                attributeToHpDelta("LongPerPect"),
+                attributeToHpDelta("LongGreat"),
+                attributeToHpDelta("LongFair"),
+                attributeToHpDelta("LongMiss"),
+                attributeToHpDelta("LongFail")
+            };
+            proceedToElement("Gauge");
+            rule.hpDeltaHold = new List<int>()
+            {
+                attributeToHpDelta("HoldingPerPect2"),
+                attributeToHpDelta("HoldingPerPect"),
+                attributeToHpDelta("HoldingGreat"),
+                attributeToHpDelta("HoldingFair"),
+                attributeToHpDelta("HoldingMiss"),
+                attributeToHpDelta("HoldingFail")
+            };
+            proceedToElement("Gauge");
+            rule.hpDeltaChain = new List<int>()
+            {
+                attributeToHpDelta("PressPerPect2"),
+                attributeToHpDelta("PressPerPect"),
+                attributeToHpDelta("PressGreat"),
+                attributeToHpDelta("PressFair"),
+                attributeToHpDelta("PressMiss"),
+                attributeToHpDelta("PressFail")
+            };
+            proceedToElement("Gauge");
+            rule.hpDeltaRepeat = new List<int>()
+            {
+                attributeToHpDelta("OnePointPerPect2"),
+                attributeToHpDelta("OnePointPerPect"),
+                attributeToHpDelta("OnePointGreat"),
+                attributeToHpDelta("OnePointFair"),
+                attributeToHpDelta("OnePointMiss"),
+                attributeToHpDelta("OnePointFail")
+            };
+
+            Func<List<int>, List<int>> hpDeltaDuringFeverFromHpDelta = (List<int> hpDelta) => new List<int>()
+            {
+                hpDelta[0],
+                hpDelta[1],
+                hpDelta[2],
+                hpDelta[3],
+                hpDelta[4],
+                hpDelta[5]
+            };
+            rule.hpDeltaBasicDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaBasic);
+            rule.hpDeltaDragDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaDrag);
+            rule.hpDeltaHoldDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaHold);
+            rule.hpDeltaChainDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaChain);
+            rule.hpDeltaRepeatDuringFever = hpDeltaDuringFeverFromHpDelta(rule.hpDeltaRepeat);
+
+            return rule;
+        }
+
+        private LegacyRulesetOverride ReadSongRule(string ruleFile)
+        {
+            LegacyRulesetOverride rule = new LegacyRulesetOverride();
+            return rule;
+        }
+
+        private LegacyRulesetOverride CombineRule(LegacyRulesetOverride baseRule, LegacyRulesetOverride songRule)
+        {
+            LegacyRulesetOverride rule = new LegacyRulesetOverride();
+            return rule;
         }
 
         public void SearchForMetadata(string ptFolderString)
@@ -308,6 +426,34 @@ namespace ConverterBackend
                     }
                     break;
                 }
+            }
+
+            // Search for script.
+            Folder scriptFolder = resourceFolder.Open("Script");
+            string baseRuleFile = scriptFolder.Open("Maingame").OpenFile("JudgmentTempInfo.xml");
+            Folder songScriptFolder = scriptFolder.Open("Song").Open(shortName);
+            if (File.Exists(baseRuleFile) && songScriptFolder.Exists())
+            {
+                LegacyRulesetOverride baseRule = null;
+
+                Action<string, string> readScript = (string filename, string patternName) =>
+                {
+                    string fullPath = songScriptFolder.OpenFile(filename);
+                    if (!File.Exists(fullPath)) return;
+                    if (baseRule == null) baseRule = ReadBaseRule(baseRuleFile);
+
+                    LegacyRulesetOverride songRule = ReadSongRule(fullPath);
+                    track.patterns.Find((Pattern p) => { return p.patternMetadata.patternName == patternName; }).legacyRulesetOverride =
+                        CombineRule(baseRule, songRule);
+                };
+                readScript($"{shortName}_star_1.ini", "Star NM");
+                readScript($"{shortName}_star_2.ini", "Star HD");
+                readScript($"{shortName}_star_3.ini", "Star MX");
+                readScript($"{shortName}_star_4.ini", "Star EX");
+                readScript($"{shortName}_pop_1.ini", "Pop NM");
+                readScript($"{shortName}_pop_2.ini", "Pop HD");
+                readScript($"{shortName}_pop_3.ini", "Pop MX");
+                readScript($"{shortName}_pop_4.ini", "Pop EX");
             }
 
             reportWriter.WriteLine();
