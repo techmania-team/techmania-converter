@@ -253,6 +253,7 @@ namespace ConverterBackend
             };
             Func<string, float> readNumber = (string prefix) =>
             {
+                proceedToLine(prefix);
                 string[] splits = lines[lineNumber].Split(" = ");
                 return float.Parse(splits[1]);
             };
@@ -293,9 +294,33 @@ namespace ConverterBackend
             return rule;
         }
 
+        private List<T> AddList<T>(List<T> list1, List<T> list2)
+        {
+            List<T> sum = new List<T>(list1.Count);
+            for (int i = 0; i < list1.Count; i++)
+            {
+                // "dynamic" tells the compiler to not worry that + operator may be not defined on T.
+                sum.Add((dynamic)list1[i] + (dynamic)list2[i]);
+            }
+            return sum;
+        }
+
         private LegacyRulesetOverride CombineRule(LegacyRulesetOverride baseRule, LegacyRulesetOverride songRule)
         {
             LegacyRulesetOverride rule = new LegacyRulesetOverride();
+
+            rule.timeWindows = AddList(baseRule.timeWindows, songRule.timeWindows);
+            rule.hpDeltaBasic = AddList(baseRule.hpDeltaBasic, songRule.hpDeltaBasic);
+            rule.hpDeltaDrag = AddList(baseRule.hpDeltaDrag, songRule.hpDeltaDrag);
+            rule.hpDeltaHold = AddList(baseRule.hpDeltaHold, songRule.hpDeltaHold);
+            rule.hpDeltaChain = AddList(baseRule.hpDeltaChain, songRule.hpDeltaChain);
+            rule.hpDeltaRepeat = AddList(baseRule.hpDeltaRepeat, songRule.hpDeltaRepeat);
+            rule.hpDeltaBasicDuringFever = AddList(baseRule.hpDeltaBasicDuringFever, songRule.hpDeltaBasicDuringFever);
+            rule.hpDeltaDragDuringFever = AddList(baseRule.hpDeltaDragDuringFever, songRule.hpDeltaDragDuringFever);
+            rule.hpDeltaHoldDuringFever = AddList(baseRule.hpDeltaHoldDuringFever, songRule.hpDeltaHoldDuringFever);
+            rule.hpDeltaChainDuringFever = AddList(baseRule.hpDeltaChainDuringFever, songRule.hpDeltaChainDuringFever);
+            rule.hpDeltaRepeatDuringFever = AddList(baseRule.hpDeltaRepeatDuringFever, songRule.hpDeltaRepeatDuringFever);
+
             return rule;
         }
 
@@ -492,6 +517,8 @@ namespace ConverterBackend
                     string fullPath = songScriptFolder.OpenFile(filename);
                     if (!File.Exists(fullPath)) return;
                     if (baseRule == null) baseRule = ReadBaseRule(baseRuleFile);
+
+                    reportWriter.WriteLine($"Found scripts for {patternName}, will convert to legacy ruleset override.");
 
                     LegacyRulesetOverride songRule = ReadSongRule(fullPath);
                     track.patterns.Find((Pattern p) => { return p.patternMetadata.patternName == patternName; }).legacyRulesetOverride =
