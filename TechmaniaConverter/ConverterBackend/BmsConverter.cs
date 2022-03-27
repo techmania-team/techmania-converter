@@ -165,7 +165,7 @@ namespace ConverterBackend
                 if (command.Length == 7 && Regex.IsMatch(command, @"#STOP.."))
                 {
                     string index = command.Substring(5, 2);
-                    int value = int.Parse(remainder) / 48 * Pattern.pulsesPerBeat;
+                    int value = (int)MathF.Floor(float.Parse(remainder) * Pattern.pulsesPerBeat / 48f);
                     stopIndexToValue.Add(index, value);
                     continue;
                 }
