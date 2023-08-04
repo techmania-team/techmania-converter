@@ -33,7 +33,7 @@ namespace ConverterBackend
             return builder.ToString();
         }
 
-        // Forces 30 fps.
+        // Forces 30 fps, as iOS doesn't support weird frame rates (such as 10,000,000/333,333 fps) well.
         public static void ConvertVideo(string source, string dest)
         {
             if (source == dest) return;
@@ -192,15 +192,38 @@ namespace ConverterBackend
                 filesToCopy.Add(new Tuple<string, string>(
                     Path.Combine(ptFolder, file), Path.Combine(techFolder, file)));
             }
-            if (converter.sourceDiscImagePath != null)
+            // Find the first disc image to use as TECHMANIA eyecatch.
+            foreach (string path in converter.sourceDiscImagePaths)
             {
-                filesToCopy.Add(new Tuple<string, string>(converter.sourceDiscImagePath,
-                    Path.Combine(techFolder, converter.track.trackMetadata.eyecatchImage)));
+                if (path != null)
+                {
+                    filesToCopy.Add(new Tuple<string, string>(path,
+                        Path.Combine(techFolder, converter.track.trackMetadata.eyecatchImage)));
+                    break;
+                }
+            }
+            // Also copy the disc images themselves.
+            string[] difficultyNames = { "", "NM", "HD", "MX", "EX" };
+            for (int i = 1; i <= 4; i++)
+            {
+                if (converter.sourceDiscImagePaths[i] != null)
+                {
+                    string source = converter.sourceDiscImagePaths[i];
+                    string extension = Path.GetExtension(source);
+                    filesToCopy.Add(new Tuple<string, string>(source,
+                        Path.Combine(techFolder, $"t3_disc_{difficultyNames[i]}{extension}")));
+                }
             }
             if (converter.sourceEyecatchPath != null)
             {
                 filesToCopy.Add(new Tuple<string, string>(converter.sourceEyecatchPath,
                     Path.Combine(techFolder, converter.track.patterns[0].patternMetadata.backImage)));
+            }
+            if (converter.sourceMiniEyecatchPath != null)
+            {
+                string extension = Path.GetExtension(converter.sourceMiniEyecatchPath);
+                filesToCopy.Add(new Tuple<string, string>(converter.sourceMiniEyecatchPath,
+                    Path.Combine(techFolder, $"t3_eyecatch_mini{extension}")));
             }
             if (converter.sourcePreviewPath != null)
             {
@@ -219,6 +242,11 @@ namespace ConverterBackend
                 {
                     filesToCopy.Add(bgaTuple);
                 }
+            }
+            if (converter.sourceBgaPreviewPath != null)
+            {
+                filesToConvert.Add(new Tuple<string, string>(converter.sourceBgaPreviewPath,
+                    Path.Combine(techFolder, converter.track.trackMetadata.previewBga)));
             }
         }
     }

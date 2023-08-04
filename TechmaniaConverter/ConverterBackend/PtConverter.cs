@@ -13,12 +13,15 @@ namespace ConverterBackend
     public class PtConverter : ConverterBase
     {
         public HashSet<string> allInstruments { get; private set; }
-        // Disc image in the source becomes the eyecatch in the destination.
-        public string sourceDiscImagePath { get; private set; }
+        // The first disc image found in the source becomes the eyecatch in the destination.
+        // They also get copied to the destination as themselves, to be used by some themes.
+        public List<string> sourceDiscImagePaths { get; private set; }
         // Eyecatch in the source becomes the background image in the destination.
         public string sourceEyecatchPath { get; private set; }
+        public string sourceMiniEyecatchPath { get; private set; }
         public string sourcePreviewPath { get; private set; }
         public string sourceBgaPath { get; private set; }
+        public string sourceBgaPreviewPath { get; private set; }
         public bool bgaConversionRequired { get; private set; }
 
         private const string unrecognizedFilenameMessage = "The file name must be in format <song_name>_<mode>_<level>.pt, where <mode> is either 'star' or 'pop', and <level> is one of '1', '2', '3' or '4'.";
@@ -401,31 +404,37 @@ namespace ConverterBackend
             track.patterns.ForEach(p => AdjustDragNoteAnchorsForScrollSpeed(p));
 
             // Search for disc image.
-            List<string> candidates = new List<string>();
-            sourceDiscImagePath = null;
+            sourceDiscImagePaths = new List<string>();
             Folder discImgFolder = resourceFolder.Open("Discimg");
             for (int i = 0; i <= 4; i++)
             {
-                candidates.Add(discImgFolder.OpenFile($"{shortName}_{i}.png"));
-                candidates.Add(discImgFolder.OpenFile($"{shortName}_{i}.jpg"));
-            }
-            candidates.Add(ptFolder.OpenFile($"{shortName}_disc.png"));
-            candidates.Add(ptFolder.OpenFile($"{shortName}_disc.jpg"));
-            foreach (string candidate in candidates)
-            {
-                if (candidate == null) continue;
+                string candidate = discImgFolder.OpenFile($"{shortName}_{i}.png");
                 if (File.Exists(candidate))
                 {
-                    sourceDiscImagePath = candidate;
-                    string extension = Path.GetExtension(sourceDiscImagePath); // Includes the dot
-                    string destinationFilename = $"{shortName}_disc{extension}";
-                    reportWriter.WriteLine($"Found disc image at {sourceDiscImagePath}.");
-                    track.trackMetadata.eyecatchImage = destinationFilename;
-                    break;
+                    sourceDiscImagePaths.Add(candidate);
+                    reportWriter.WriteLine($"Found disc image at {candidate}.");
+                    continue;
                 }
+                candidate = discImgFolder.OpenFile($"{shortName}_{i}.jpg");
+                if (File.Exists(candidate))
+                {
+                    sourceDiscImagePaths.Add(candidate);
+                    reportWriter.WriteLine($"Found disc image at {candidate}.");
+                    continue;
+                }
+                sourceDiscImagePaths.Add(null);
+            }
+            foreach (string path in sourceDiscImagePaths)
+            {
+                if (path == null) continue;
+                string extension = Path.GetExtension(path); // Includes the dot
+                string destinationFilename = $"{shortName}_disc{extension}";
+                track.trackMetadata.eyecatchImage = destinationFilename;
+                break;
             }
 
             // Search for eyecatch.
+            List<string> candidates = new List<string>();
             candidates.Clear();
             sourceEyecatchPath = null;
             Folder eyecatchFolder = resourceFolder.Open("Eyecatch").Open("Song");
@@ -446,6 +455,23 @@ namespace ConverterBackend
                     string destinationFilename = $"{shortName}_eyecatch{extension}";
                     reportWriter.WriteLine($"Found eyecatch image at {sourceEyecatchPath}.");
                     foreach (Pattern p in track.patterns) p.patternMetadata.backImage = destinationFilename;
+                    break;
+                }
+            }
+
+            // Search for mini eyecatch.
+            candidates.Clear();
+            sourceMiniEyecatchPath = null;
+            Folder miniEyecatchFolder = eyecatchFolder.Open("mini");
+            candidates.Add(miniEyecatchFolder.OpenFile($"{shortName}_mini.png"));
+            candidates.Add(miniEyecatchFolder.OpenFile($"{shortName}_mini.jpg"));
+            foreach (string candidate in candidates)
+            {
+                if (candidate == null) continue;
+                if (File.Exists(candidate))
+                {
+                    sourceMiniEyecatchPath = candidate;
+                    reportWriter.WriteLine($"Found mini eyecatch image at {sourceMiniEyecatchPath}.");
                     break;
                 }
             }
@@ -502,6 +528,17 @@ namespace ConverterBackend
                     }
                     break;
                 }
+            }
+
+            // Search for BGA preview.
+            sourceBgaPreviewPath = null;
+            string bgaPreviewCandidate = resourceFolder.Open("Preview").OpenFile($"{shortName}_pre.bik");
+            if (File.Exists(bgaPreviewCandidate))
+            {
+                sourceBgaPreviewPath = bgaPreviewCandidate;
+                string destinationFilename = $"{shortName}_pre.mp4";
+                track.trackMetadata.previewBga = destinationFilename;
+                reportWriter.WriteLine($"Found BGA preview at {sourceBgaPreviewPath}.");
             }
 
             // Search for script.
