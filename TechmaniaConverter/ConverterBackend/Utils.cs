@@ -33,6 +33,7 @@ namespace ConverterBackend
             return builder.ToString();
         }
 
+        // Forces 30 fps.
         public static void ConvertVideo(string source, string dest)
         {
             if (source == dest) return;
@@ -41,7 +42,7 @@ namespace ConverterBackend
             Process p = new Process();
             ProcessStartInfo startInfo = p.StartInfo;
             startInfo.FileName = "ffmpeg";
-            startInfo.Arguments = $"-i \"{source}\" \"{dest}\"";
+            startInfo.Arguments = $"-i \"{source}\" -r 30 \"{dest}\"";
             startInfo.CreateNoWindow = false;
             startInfo.ErrorDialog = true;
             startInfo.UseShellExecute = false;
