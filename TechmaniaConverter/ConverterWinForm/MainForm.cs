@@ -24,8 +24,9 @@ namespace ConverterWinForm
 
         private void RefreshLoadButtons()
         {
-            loadBmsButton.Enabled = tracksFolder != null;
-            loadPtButton.Enabled = tracksFolder != null;
+            bool enabled = !string.IsNullOrEmpty(tracksFolder);
+            loadBmsButton.Enabled = enabled;
+            loadPtButton.Enabled = enabled;
         }
 
         #region Bms input
@@ -125,6 +126,12 @@ namespace ConverterWinForm
                 trackFolderTextBox.Text = dialog.SelectedPath;
                 tracksFolder = trackFolderTextBox.Text;
             }
+            RefreshLoadButtons();
+        }
+
+        private void trackFolderTextBox_TextChanged(object sender, EventArgs e)
+        {
+            tracksFolder = trackFolderTextBox.Text;
             RefreshLoadButtons();
         }
 
