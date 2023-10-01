@@ -71,7 +71,7 @@ namespace ConverterBackend
         // tech: the output track, serialized.
         // techFolder: output folder.
         // report: the report to show on UI.
-        // filesToCopy: file pairs will be added to this list.
+        // filesToCopy: file pairs (full paths) will be added to this list.
         //
         // May throw exceptions, which may contain an inner exception.
         public static void LoadAndConvertBms(string bmsPath, string tracksFolder, out string tech, out string techFolder, out string report, List<Tuple<string, string>> filesToCopy)
@@ -85,7 +85,11 @@ namespace ConverterBackend
             try
             {
                 bms = File.ReadAllText(bmsPath);
-                allFilesInBmsFolder = Directory.GetFiles(bmsFolder);
+                allFilesInBmsFolder = Directory.GetFiles(bmsFolder, "*.*", new EnumerationOptions()
+                {
+                    RecurseSubdirectories = true,
+                    ReturnSpecialDirectories = false
+                });
             }
             catch (Exception ex)
             {
@@ -96,7 +100,8 @@ namespace ConverterBackend
             converter.allFilenamesInBmsFolder = new HashSet<string>();
             foreach (string file in allFilesInBmsFolder)
             {
-                converter.allFilenamesInBmsFolder.Add(Path.GetFileName(file).ToLower());
+                string relativePath = Path.GetRelativePath(bmsFolder, file);
+                converter.allFilenamesInBmsFolder.Add(relativePath.ToLower().Replace('\\', '/'));
             }
 
             try

@@ -18,7 +18,10 @@ namespace ConverterBackend
         private Dictionary<string, int> stopIndexToValue;
         public Dictionary<string, string> bmpIndexToName { get; private set; }
 
-        // This does not include full paths.
+        // All paths are:
+        // - relative to the BMS folder
+        // - all lower case
+        // - all '\\' replaced with '/'
         public HashSet<string> allFilenamesInBmsFolder;
 
         private SortedSet<string> channels;  // Used channels among 10-4Z.
@@ -387,7 +390,7 @@ namespace ConverterBackend
 
             foreach (string acceptedFilename in acceptedFilenames)
             {
-                if (allFilenamesInBmsFolder.Contains(acceptedFilename.ToLower()))
+                if (allFilenamesInBmsFolder.Contains(acceptedFilename.ToLower().Replace('\\', '/')))
                 {
                     return acceptedFilename;
                 }

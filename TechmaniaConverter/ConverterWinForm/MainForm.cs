@@ -192,6 +192,7 @@ namespace ConverterWinForm
                 string dest = pair.Item2;
                 if (source != dest)
                 {
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest));
                     File.Copy(source, dest, overwrite: true);
                 }
                 tasksDone++;
@@ -201,6 +202,7 @@ namespace ConverterWinForm
             {
                 string source = pair.Item1;
                 string dest = pair.Item2;
+                Directory.CreateDirectory(Path.GetDirectoryName(dest));
                 Utils.ConvertVideo(source, dest);
                 tasksDone++;
                 worker.ReportProgress(tasksDone * 100 / numTasks);

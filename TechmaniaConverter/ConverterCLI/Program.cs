@@ -129,6 +129,7 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
                 string dest = pair.Item2;
                 if (source != dest)
                 {
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest));
                     File.Copy(source, dest, overwrite: true);
                 }
             }
@@ -136,6 +137,7 @@ Set --silent to operate in silent mode. The tool won't print the report, won't a
             {
                 string source = pair.Item1;
                 string dest = pair.Item2;
+                Directory.CreateDirectory(Path.GetDirectoryName(dest));
                 Utils.ConvertVideo(source, dest);
             }
         }
